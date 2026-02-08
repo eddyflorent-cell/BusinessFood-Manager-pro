@@ -553,6 +553,17 @@
             transform: translateY(-4px);
         }
         
+        /* 🛡️ Style pour packs à perte */
+        .ingredient-card.loss-warning {
+            border-color: var(--danger);
+            background: linear-gradient(135deg, #fff 0%, #ffebee 100%);
+        }
+        
+        .ingredient-card.loss-warning:hover {
+            border-color: var(--danger);
+            box-shadow: 0 4px 16px rgba(252, 92, 101, 0.3);
+        }
+        
         .ingredient-header {
             display: flex;
             justify-content: space-between;
@@ -836,6 +847,26 @@
             }
         }
         
+        /* Ingredient lines for recipe forms */
+        .ingredient-line {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr auto;
+            gap: var(--space-sm);
+            margin-bottom: var(--space-sm);
+            align-items: center;
+        }
+        
+        .ingredient-line select,
+        .ingredient-line input {
+            width: 100%;
+        }
+        
+        @media (max-width: 768px) {
+            .ingredient-line {
+                grid-template-columns: 1fr;
+            }
+        }
+        
         /* Print styles for recipes */
         @media print {
             /* Hide everything except recipe modal */
@@ -961,6 +992,12 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a href="#" class="nav-link" data-page="profitability">
+                            <span class="nav-icon">📊</span>
+                            <span>Rentabilité</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a href="#" class="nav-link" data-page="production">
                             <span class="nav-icon">⚙️</span>
                             <span data-i18n="production">Production</span>
@@ -1028,8 +1065,8 @@
 
                 <!-- Currency Switcher -->
                 <div class="switcher">
-                    <button class="active" data-currency="XAF">FCFA</button>
-                    <button data-currency="EUR">€</button>
+                    <button class="active" data-currency="EUR">€</button>
+                    <button data-currency="GBP">£</button>
                     <button data-currency="USD">$</button>
                 </div>
 
@@ -1048,25 +1085,30 @@
     </div>
 
     <script type="module">
-        // Import CORE services
-        import { IngredientService } from './src/core/services/IngredientService.js';
-        import { RecipeService } from './src/core/services/RecipeService.js';
-        import { SaleService } from './src/core/services/SaleService.js';
-        import { DashboardService } from './src/core/services/DashboardService.js';
-        import { ExpenseService } from './src/core/services/ExpenseService.js';
-        import { StorageManager } from './src/core/data/StorageManager.js';
+        // Import CORE services (v53.0 - Nouvelle démo réaliste)
+        import { IngredientService } from './src/core/services/IngredientService.js?v=55.1';
+        import { RecipeService } from './src/core/services/RecipeService.js?v=55.1';
+        import { SaleService } from './src/core/services/SaleService.js?v=55.1';
+        import { DashboardService } from './src/core/services/DashboardService.js?v=55.1';
+        import { ExpenseService } from './src/core/services/ExpenseService.js?v=55.1';
+        import { ProfitabilityService } from './src/core/services/ProfitabilityService.js?v=55.1';
+        import { PlatformCommissionService } from './src/core/services/PlatformCommissionService.js?v=55.1';
+        import { IngredientImporter } from './src/core/services/IngredientImporter.js?v=55.1';
+        import { PackService } from './src/core/services/PackService.js?v=55.1';
+        import { StorageManager } from './src/core/data/StorageManager.js?v=55.1';
+        import { IngredientDatabaseCore } from './src/core/data/IngredientDatabaseCore.js?v=55.1';
         
         // Import CORE models
-        import { Ingredient } from './src/core/models/Ingredient.js';
-        import { Lot } from './src/core/models/Lot.js';
-        import { Recipe, RecipeIngredient } from './src/core/models/Recipe.js';
-        import { Production, UsedLot } from './src/core/models/Production.js';
-        import { Sale, SaleItem } from './src/core/models/Sale.js';
-        import { Expense } from './src/core/models/Expense.js';
-        import { Pack, PackItem } from './src/core/models/Pack.js';
+        import { Ingredient } from './src/core/models/Ingredient.js?v=55.1';
+        import { Lot } from './src/core/models/Lot.js?v=55.1';
+        import { Recipe, RecipeIngredient } from './src/core/models/Recipe.js?v=55.1';
+        import { Production, UsedLot } from './src/core/models/Production.js?v=55.1';
+        import { Sale, SaleItem } from './src/core/models/Sale.js?v=55.1';
+        import { Expense } from './src/core/models/Expense.js?v=55.1';
+        import { Pack, PackItem } from './src/core/models/Pack.js?v=55.1';
         
         // Import DEMO DATA
-        import { demoWESalon } from './src/demo-we-salon.js';
+        import { demoSalonModerne as demoWESalon } from './src/demo-we-salon.js?v=55.1';
         
         // Make classes available globally for demo data conversion and loadData
         window.Ingredient = Ingredient;
@@ -1409,37 +1451,40 @@
 
         // Currency Formats
         const currencyFormats = {
-            XAF: { symbol: 'FCFA', position: 'after', decimals: 0, separator: ' ' },
             EUR: { symbol: '€', position: 'after', decimals: 2, separator: ',' },
-            USD: { symbol: '$', position: 'before', decimals: 2, separator: ',' },
-            GBP: { symbol: '£', position: 'before', decimals: 2, separator: ',' }
+            GBP: { symbol: '£', position: 'before', decimals: 2, separator: ',' },
+            USD: { symbol: '$', position: 'before', decimals: 2, separator: ',' }
         };
         
-        // Taux de change (base: FCFA)
+        // Taux de change (base: EUR)
         const exchangeRates = {
-            XAF: 1,           // 1 FCFA = 1 FCFA
-            EUR: 655.96,      // 1 EUR = 655.96 FCFA
-            USD: 600,         // 1 USD = 600 FCFA
-            GBP: 800          // 1 GBP = 800 FCFA
+            EUR: 1,           // 1 EUR = 1 EUR (devise de référence)
+            GBP: 0.85,        // 1 GBP = 0.85 EUR (1 EUR = 1.18 GBP)
+            USD: 1.09         // 1 USD = 1.09 EUR (1 EUR = 0.92 USD)
         };
         
-        // Convertir montant de FCFA vers devise cible
-        function convertCurrency(amountInXAF, targetCurrency) {
-            if (targetCurrency === 'XAF') return amountInXAF;
-            return amountInXAF / exchangeRates[targetCurrency];
+        // Convertir montant de EUR vers devise cible
+        function convertCurrency(amountInEUR, targetCurrency) {
+            if (targetCurrency === 'EUR') return amountInEUR;
+            return amountInEUR / exchangeRates[targetCurrency];
         }
         
-        // Convertir montant de devise source vers FCFA
-        function convertToXAF(amount, sourceCurrency) {
-            if (sourceCurrency === 'XAF') return amount;
+        // Convertir montant de devise source vers EUR
+        function convertToEUR(amount, sourceCurrency) {
+            if (sourceCurrency === 'EUR') return amount;
             return amount * exchangeRates[sourceCurrency];
         }
 
         // App State
         const appState = {
             currentLang: 'fr',
-            currentCurrency: 'XAF',
+            currentCurrency: 'EUR',
             currentPage: 'dashboard',
+            exchangeRates: {
+                'EUR': 1.0,
+                'GBP': 0.85,
+                'USD': 1.09
+            },
             data: {
                 ingredients: [],
                 recipes: [],
@@ -1459,7 +1504,20 @@
                     { id: 'cat7', name: 'Matières grasses', parent: null },
                     { id: 'cat8', name: 'Oeufs & Lait', parent: null },
                     { id: 'cat9', name: 'Additifs', parent: null }
-                ]
+                ],
+                settings: {
+                    // 💰 COEFFICIENT DÉPENSES FIXES
+                    // Prend en compte loyer, salaires, électricité, etc.
+                    // Formule : Coût réel = Coût ingrédients × coefficient
+                    // Exemple : 1.40 = 40% de dépenses fixes
+                    overheadCoefficient: 1.40,  // Par défaut 40%
+                    
+                    // Affichage
+                    showDirectCost: true,  // Afficher coût direct ET coût total
+                    
+                    // Pour calcul auto (futur module Dépenses)
+                    autoCalculateCoefficient: false
+                }
             },
             customDlcFilter: null
         };
@@ -1543,10 +1601,124 @@
                 appState.data = saved;
             }
         }
+        
+        /**
+         * Initialise la base d'ingrédients avec les 100 ingrédients essentiels
+         * Se déclenche automatiquement si la base est vide ou contient moins de 50 ingrédients
+         */
+        function initializeIngredientDatabase() {
+            try {
+                // Vérifier si la base a besoin d'être initialisée
+                const currentCount = appState.data.ingredients.length;
+                
+                // Détecter les ingrédients corrompus (undefined)
+                const corruptedCount = appState.data.ingredients.filter(ing => 
+                    !ing.name || ing.name === 'undefined' || !ing.id
+                ).length;
+                
+                if (corruptedCount > 0) {
+                    console.warn(`⚠️ ${corruptedCount} ingrédients corrompus détectés, nettoyage...`);
+                    // Supprimer les ingrédients corrompus
+                    appState.data.ingredients = appState.data.ingredients.filter(ing => 
+                        ing.name && ing.name !== 'undefined' && ing.id
+                    );
+                    StorageManager.save(appState.data);
+                }
+                
+                const validCount = appState.data.ingredients.length;
+                
+                // Si moins de 50 ingrédients, on propose d'ajouter la base
+                if (validCount < 50) {
+                    console.log(`🗂️ Base d'ingrédients détectée : ${validCount} ingrédients`);
+                    console.log('📥 Chargement de la base de 100 ingrédients essentiels...');
+                    
+                    // Récupérer les ingrédients de la base
+                    const coreIngredients = IngredientDatabaseCore.ingredients;
+                    
+                    // Convertir en instances Ingredient avec ID unique
+                    const newIngredients = coreIngredients.map(data => {
+                        // Créer un ID unique basé sur le nom si pas d'ID
+                        const ingredientId = data.id || `ING-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+                        
+                        // Vérifier si l'ingrédient existe déjà (par nom)
+                        const exists = appState.data.ingredients.find(ing => 
+                            ing.name.toLowerCase() === data.name.toLowerCase()
+                        );
+                        
+                        if (exists) {
+                            // Déjà présent, on skip
+                            return null;
+                        }
+                        
+                        // Créer le nouvel ingrédient avec le bon format
+                        const ingredient = new Ingredient({
+                            id: ingredientId,
+                            name: data.name,
+                            category: data.category || '',
+                            baseUnit: data.baseUnit || 'g',
+                            displayUnit: data.baseUnit || 'g',
+                            alertBaseQty: 0,
+                            yieldPercent: data.yieldPercent || 100,
+                            wasteType: data.wasteType || '',
+                            lots: [],
+                            createdAt: new Date(),
+                            updatedAt: new Date()
+                        });
+                        
+                        // Ajouter les allergènes si présents
+                        if (data.allergens && Array.isArray(data.allergens)) {
+                            ingredient.allergens = data.allergens;
+                        }
+                        
+                        // Ajouter le prix moyen si présent (pour info)
+                        if (data.avgPricePerKg) {
+                            ingredient.avgPricePerKg = data.avgPricePerKg;
+                        }
+                        
+                        return ingredient;
+                    }).filter(ing => ing !== null); // Enlever les nulls (doublons)
+                    
+                    // Ajouter à la base existante
+                    appState.data.ingredients = [...appState.data.ingredients, ...newIngredients];
+                    
+                    // Sauvegarder
+                    StorageManager.save(appState.data);
+                    
+                    console.log(`✅ ${newIngredients.length} ingrédients ajoutés à la base !`);
+                    console.log(`📊 Total : ${appState.data.ingredients.length} ingrédients disponibles`);
+                    
+                    // Afficher une notification à l'utilisateur
+                    showToast(`✅ ${newIngredients.length} ingrédients professionnels ajoutés automatiquement !`, 'success');
+                    
+                    return true;
+                }
+                
+                console.log(`✅ Base d'ingrédients déjà initialisée (${currentCount} ingrédients)`);
+                return false;
+                
+            } catch (error) {
+                console.error('❌ Erreur lors de l\'initialisation de la base d\'ingrédients:', error);
+                return false;
+            }
+        }
 
         // Save data to StorageManager
         function saveData() {
             StorageManager.save(appState.data);
+            // Sauvegarder aussi les taux de change
+            localStorage.setItem('exchangeRates', JSON.stringify(appState.exchangeRates));
+        }
+        
+        // Charger les taux de change
+        function loadExchangeRates() {
+            const saved = localStorage.getItem('exchangeRates');
+            if (saved) {
+                try {
+                    appState.exchangeRates = JSON.parse(saved);
+                } catch (e) {
+                    console.error('Error loading exchange rates:', e);
+                }
+            }
         }
 
         // i18n Translation function
@@ -1569,7 +1741,7 @@
 
         // Format currency
         function formatCurrency(amount) {
-            // Tous les montants sont stockés en FCFA
+            // Tous les montants sont stockés en EUR (devise de référence)
             // On convertit selon la devise sélectionnée
             const convertedAmount = convertCurrency(amount, appState.currentCurrency);
             const format = currencyFormats[appState.currentCurrency];
@@ -1674,7 +1846,7 @@
                     </div>
                     <div class="action-card" onclick="loadDemoWE()" style="border: 2px dashed var(--primary);">
                         <div class="action-icon">🧇</div>
-                        <div class="action-title">Démo W.E Salon</div>
+                        <div class="action-title">Démo Salon Moderne</div>
                     </div>
                 </div>
             `;
@@ -1701,10 +1873,20 @@
                                 return count === 0 ? 'Aucune alerte' : count === 1 ? '1 alerte' : count + ' alertes';
                             })()}</p>
                         </div>
-                        <button class="btn btn-primary" onclick="showAddIngredientModal()">
-                            <span>➕</span>
-                            <span data-i18n="add_ingredient">Ajouter ingrédient</span>
-                        </button>
+                        <div style="display: flex; gap: var(--space-sm);">
+                            <button class="btn" style="background: var(--secondary); color: white;" onclick="showImportModal()">
+                                <span>📥</span>
+                                <span>Importer</span>
+                            </button>
+                            <button class="btn" style="background: var(--success); color: white;" onclick="showExportModal()">
+                                <span>📤</span>
+                                <span>Exporter</span>
+                            </button>
+                            <button class="btn btn-primary" onclick="showAddIngredientModal()">
+                                <span>➕</span>
+                                <span data-i18n="add_ingredient">Ajouter ingrédient</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -1795,7 +1977,11 @@
                             <form id="addIngredientForm">
                                 <div class="form-group">
                                     <label>Nom de l'ingrédient *</label>
-                                    <input type="text" name="name" required placeholder="Ex: Farine T55">
+                                    <input type="text" name="name" id="ingredientNameInput" required placeholder="Ex: Farine T55" autocomplete="off">
+                                    <div id="ingredientSuggestions" style="display: none; position: absolute; background: white; border: 2px solid var(--primary); border-radius: var(--radius-md); box-shadow: 0 4px 12px rgba(0,0,0,0.15); max-height: 300px; overflow-y: auto; z-index: 1000; width: calc(100% - 32px);"></div>
+                                    <small style="color: var(--gray);">
+                                        💡 Tapez les premières lettres pour voir les suggestions avec rendements pré-configurés
+                                    </small>
                                 </div>
                                 <div class="form-row">
                                     <div class="form-group">
@@ -1819,19 +2005,57 @@
                                     <input type="number" name="alertQty" placeholder="Ex: 1000" min="0">
                                 </div>
                                 
+                                <!-- Section Rendements PRO (v51) -->
+                                <h3 style="margin-top: var(--space-lg); margin-bottom: var(--space-md); font-family: var(--font-display);">
+                                    💰 Coûts réels (Rendements PRO)
+                                </h3>
+                                
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Rendement (%) *</label>
+                                        <input type="number" name="yieldPercent" value="100" min="1" max="100" step="0.1" required>
+                                        <small style="color: var(--gray);">
+                                            Partie utilisable après épluchage/parage. Ex: Ananas = 40%, Farine = 100%
+                                        </small>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Type de déchet</label>
+                                        <input type="text" name="wasteType" placeholder="Ex: Peau + cœur">
+                                        <small style="color: var(--gray);">
+                                            Épluchures, os, peau, trognon, noyau, etc.
+                                        </small>
+                                    </div>
+                                </div>
+                                
+                                <div style="background: linear-gradient(135deg, #fff9e6 0%, #fff3d6 100%); padding: var(--space-md); border-radius: var(--radius-md); border-left: 4px solid #f59e0b; margin-bottom: var(--space-md);">
+                                    <div style="display: flex; align-items: flex-start; gap: var(--space-sm);">
+                                        <span style="font-size: 20px;">ℹ️</span>
+                                        <div style="flex: 1;">
+                                            <strong style="color: #f59e0b; display: block; margin-bottom: 4px;">Impact du rendement sur le coût</strong>
+                                            <p style="margin: 0; font-size: 13px; line-height: 1.5; color: #78350f;">
+                                                Le rendement ajuste automatiquement le coût réel. 
+                                                <br>
+                                                <strong>Exemple :</strong> 1kg acheté à 2€ avec rendement 80% = coût réel de 2,50€/kg (+25%)
+                                                <br>
+                                                Un ananas à 40% de rendement coûte réellement <strong>×2,5 son prix d'achat !</strong>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
                                 <h3 style="margin-top: var(--space-lg); margin-bottom: var(--space-md); font-family: var(--font-display);">
                                     Réception du lot
                                 </h3>
                                 
                                 <div class="form-group">
-                                    <label>Réceptionnaire * <span style="color: var(--danger); font-weight: bold;">OBLIGATOIRE</span></label>
-                                    <select name="lotReceivedBy" required>
+                                    <label>Réceptionnaire (optionnel)</label>
+                                    <select name="lotReceivedBy">
                                         <option value="">Qui a réceptionné ce lot ?</option>
                                         ${(appState.data.staff || []).filter(s => s.active).map(s => `
                                             <option value="${s.name}">${s.name} (${s.role})</option>
                                         `).join('')}
                                     </select>
-                                    <small style="color: var(--gray);">Personne qui a vérifié et réceptionné cette livraison (traçabilité HACCP)</small>
+                                    <small style="color: var(--gray);">Personne qui a vérifié et réceptionné cette livraison (optionnel, traçabilité HACCP)</small>
                                 </div>
                                 
                                 <h3 style="margin-top: var(--space-lg); margin-bottom: var(--space-md); font-family: var(--font-display);">
@@ -1849,6 +2073,7 @@
                                             <option value="g">Grammes (g)</option>
                                             <option value="kg">Kilogrammes (kg)</option>
                                             <option value="ml">Millilitres (ml)</option>
+                                            <option value="cL">Centilitres (cL)</option>
                                             <option value="L">Litres (L)</option>
                                             <option value="piece">Pièces</option>
                                         </select>
@@ -1862,6 +2087,26 @@
                                     <div class="form-group">
                                         <label>Frais d'approche</label>
                                         <input type="number" name="lotFees" placeholder="Ex: 500" min="0" step="0.01">
+                                    </div>
+                                </div>
+                                
+                                <!-- Multi-devises (v51) -->
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Devise d'achat *</label>
+                                        <select name="lotCurrency" id="lotCurrency" required onchange="updateExchangeRateField()">
+                                            <option value="EUR">€ Euro (par défaut)</option>
+                                            <option value="GBP">£ Livre Sterling</option>
+                                            <option value="USD">$ Dollar US</option>
+                                        </select>
+                                        <small style="color: var(--gray);">Devise utilisée pour cet achat</small>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Taux de change (vers EUR)</label>
+                                        <input type="number" name="lotExchangeRate" id="lotExchangeRate" placeholder="Auto" min="0" step="0.0001" disabled>
+                                        <small style="color: var(--gray);" id="exchangeRateHelper">
+                                            Achat en EUR - Pas de conversion
+                                        </small>
                                     </div>
                                 </div>
                                 <div class="form-row">
@@ -1970,6 +2215,18 @@
                             <div>
                                 <h3 class="ingredient-name">${ing.name}</h3>
                                 <span class="ingredient-category">${ing.category || 'Non classé'}</span>
+                                ${(() => {
+                                    const yieldPercent = Number(ing.yieldPercent);
+                                    if (yieldPercent && yieldPercent > 0 && yieldPercent < 100) {
+                                        return `
+                                            <div style="margin-top: 4px; font-size: 12px; color: var(--warning); font-weight: 500;">
+                                                📊 Rendement : ${yieldPercent}%
+                                                ${ing.wasteType ? `<span style="color: var(--gray);"> • ${ing.wasteType}</span>` : ''}
+                                            </div>
+                                        `;
+                                    }
+                                    return '';
+                                })()}
                             </div>
                             ${hasLowStock || hasDlcIssue ? `
                                 <div class="alert-badge ${hasDlcIssue ? 'danger' : 'warning'}">
@@ -2124,10 +2381,268 @@
             document.getElementById('filterRecipeCategory')?.addEventListener('change', filterRecipes);
         }
 
+        // ========================================
+        // PROFITABILITY PAGE (PHASE 2)
+        // ========================================
+        
+        function renderProfitabilityPage() {
+            // Analyser la rentabilité de tous les produits
+            const analysis = ProfitabilityService.analyzeProfitability(
+                appState.data.recipes || [],
+                appState.data.packs || [],
+                appState.data.ingredients || []
+            );
+            
+            const { products, stats, recommendations } = analysis;
+            
+            const html = `
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">📊 Analyse Rentabilité</h1>
+                        <p class="page-subtitle">Identifiez les produits rentables et ceux à optimiser</p>
+                    </div>
+                </div>
+                
+                <!-- Statistiques globales -->
+                <div class="stats-grid" style="margin-bottom: var(--space-lg);">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-label">Total Produits</span>
+                            <span class="stat-icon">📦</span>
+                        </div>
+                        <div class="stat-value">${stats.total}</div>
+                        <div class="stat-footer">Recettes + Packs</div>
+                    </div>
+                    
+                    <div class="stat-card danger">
+                        <div class="stat-header">
+                            <span class="stat-label">En Perte</span>
+                            <span class="stat-icon">🔴</span>
+                        </div>
+                        <div class="stat-value">${stats.inLoss}</div>
+                        <div class="stat-footer">Marge négative</div>
+                    </div>
+                    
+                    <div class="stat-card warning">
+                        <div class="stat-header">
+                            <span class="stat-label">Marge Faible</span>
+                            <span class="stat-icon">🟡</span>
+                        </div>
+                        <div class="stat-value">${stats.lowMargin}</div>
+                        <div class="stat-footer">Marge &lt; 25%</div>
+                    </div>
+                    
+                    <div class="stat-card success">
+                        <div class="stat-header">
+                            <span class="stat-label">Excellents</span>
+                            <span class="stat-icon">🟢</span>
+                        </div>
+                        <div class="stat-value">${stats.excellent}</div>
+                        <div class="stat-footer">Marge ≥ 50%</div>
+                    </div>
+                </div>
+                
+                <!-- Recommandations -->
+                ${recommendations.length > 0 ? `
+                    <div style="background: linear-gradient(135deg, #fff9e6 0%, #fff3d6 100%); padding: var(--space-md); border-radius: var(--radius-md); border-left: 4px solid #f59e0b; margin-bottom: var(--space-lg);">
+                        <h3 style="color: #f59e0b; margin-bottom: var(--space-sm); display: flex; align-items: center; gap: var(--space-xs);">
+                            <span>💡</span>
+                            <span>Recommandations Automatiques</span>
+                        </h3>
+                        <div style="display: flex; flex-direction: column; gap: var(--space-sm);">
+                            ${recommendations.slice(0, 5).map(rec => `
+                                <div style="display: flex; align-items: start; gap: var(--space-sm); padding: var(--space-sm); background: white; border-radius: var(--radius-sm);">
+                                    <span style="font-size: 20px;">${rec.icon}</span>
+                                    <div style="flex: 1;">
+                                        <strong style="color: var(--dark);">${rec.product || 'Général'}</strong>
+                                        <p style="margin: 4px 0; font-size: 13px; color: #78350f;">${rec.message}</p>
+                                        <p style="margin: 0; font-size: 12px; color: #78350f;"><strong>Action:</strong> ${rec.action}</p>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+                
+                <!-- Filtres et tri -->
+                <div style="background: white; padding: var(--space-md); border-radius: var(--radius-md); margin-bottom: var(--space-md); box-shadow: var(--shadow-sm);">
+                    <div style="display: flex; gap: var(--space-md); align-items: center; flex-wrap: wrap;">
+                        <div style="flex: 1; min-width: 200px;">
+                            <input type="text" id="searchProfitability" placeholder="🔍 Rechercher un produit..." 
+                                   style="width: 100%; padding: 12px 16px; border: 2px solid var(--light); border-radius: var(--radius-md); font-family: var(--font-body);">
+                        </div>
+                        <div>
+                            <label style="font-size: 13px; color: var(--gray); margin-right: 8px;">Type:</label>
+                            <select id="filterProfitType" style="padding: 10px 16px; border: 2px solid var(--light); border-radius: var(--radius-md); font-family: var(--font-body);">
+                                <option value="all">Tous</option>
+                                <option value="recipe">Recettes</option>
+                                <option value="pack">Packs</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size: 13px; color: var(--gray); margin-right: 8px;">Classification:</label>
+                            <select id="filterProfitClassification" style="padding: 10px 16px; border: 2px solid var(--light); border-radius: var(--radius-md); font-family: var(--font-body);">
+                                <option value="all">Toutes</option>
+                                <option value="loss">🔴 Pertes</option>
+                                <option value="low">🟡 Faibles</option>
+                                <option value="medium">⚪ Correctes</option>
+                                <option value="high">🟢 Excellentes</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size: 13px; color: var(--gray); margin-right: 8px;">Trier par:</label>
+                            <select id="sortProfitBy" style="padding: 10px 16px; border: 2px solid var(--light); border-radius: var(--radius-md); font-family: var(--font-body);">
+                                <option value="margin-asc">Marge ↑</option>
+                                <option value="margin-desc">Marge ↓</option>
+                                <option value="name-asc">Nom A→Z</option>
+                                <option value="name-desc">Nom Z→A</option>
+                                <option value="cost-asc">Coût ↑</option>
+                                <option value="cost-desc">Coût ↓</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Tableau des produits -->
+                <div id="profitabilityTable" style="background: white; border-radius: var(--radius-md); box-shadow: var(--shadow-sm); overflow: hidden;">
+                    ${renderProfitabilityTable(products)}
+                </div>
+            `;
+            
+            document.getElementById('mainContent').innerHTML = html;
+            
+            // Event listeners pour filtres
+            document.getElementById('searchProfitability')?.addEventListener('input', filterProfitabilityTable);
+            document.getElementById('filterProfitType')?.addEventListener('change', filterProfitabilityTable);
+            document.getElementById('filterProfitClassification')?.addEventListener('change', filterProfitabilityTable);
+            document.getElementById('sortProfitBy')?.addEventListener('change', filterProfitabilityTable);
+        }
+        
+        function renderProfitabilityTable(products) {
+            if (products.length === 0) {
+                return `
+                    <div class="empty-state">
+                        <div class="empty-icon">📊</div>
+                        <h3>Aucun produit à analyser</h3>
+                        <p>Créez des recettes et définissez des prix de vente pour voir l'analyse</p>
+                    </div>
+                `;
+            }
+            
+            return `
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: var(--light); border-bottom: 2px solid var(--light);">
+                            <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--dark);">Statut</th>
+                            <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--dark);">Produit</th>
+                            <th style="padding: 16px; text-align: right; font-weight: 600; color: var(--dark);">Coût</th>
+                            <th style="padding: 16px; text-align: right; font-weight: 600; color: var(--dark);">Prix</th>
+                            <th style="padding: 16px; text-align: right; font-weight: 600; color: var(--dark);">Marge</th>
+                            <th style="padding: 16px; text-align: right; font-weight: 600; color: var(--dark);">Prix Suggéré</th>
+                            <th style="padding: 16px; text-align: center; font-weight: 600; color: var(--dark);">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${products.map(product => `
+                            <tr style="border-bottom: 1px solid var(--light); transition: background 0.2s;" 
+                                onmouseover="this.style.background='var(--light)'" 
+                                onmouseout="this.style.background='white'">
+                                <td style="padding: 16px;">
+                                    <span style="font-size: 24px;">${product.classification.icon}</span>
+                                </td>
+                                <td style="padding: 16px;">
+                                    <div>
+                                        <strong style="color: var(--dark);">${product.name}</strong>
+                                        <div style="font-size: 12px; color: var(--gray); margin-top: 4px;">
+                                            ${product.type === 'recipe' ? '📋 Recette' : '🎁 Pack'} • ${product.category}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td style="padding: 16px; text-align: right;">
+                                    <strong style="color: var(--danger);">${formatCurrency(product.cost)}</strong>
+                                </td>
+                                <td style="padding: 16px; text-align: right;">
+                                    <strong style="color: var(--success);">${formatCurrency(product.price)}</strong>
+                                </td>
+                                <td style="padding: 16px; text-align: right;">
+                                    <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+                                        <strong style="color: ${product.classification.color}; font-size: 16px;">
+                                            ${product.marginPercent >= 0 ? '+' : ''}${product.marginPercent.toFixed(1)}%
+                                        </strong>
+                                        <span style="font-size: 11px; color: ${product.classification.color}; font-weight: 600;">
+                                            ${product.classification.label}
+                                        </span>
+                                    </div>
+                                </td>
+                                <td style="padding: 16px; text-align: right;">
+                                    <div style="font-size: 12px; color: var(--gray);">
+                                        <div style="margin-bottom: 4px;">
+                                            <strong>30%:</strong> ${formatCurrency(product.suggestedPrices.margin30)}
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            <strong>50%:</strong> ${formatCurrency(product.suggestedPrices.margin50)}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td style="padding: 16px; text-align: center;">
+                                    <button class="btn btn-sm" onclick="showProductPriceSimulator('${product.id}', '${product.type}')" 
+                                            style="padding: 6px 12px; font-size: 12px; background: var(--primary); color: white; border: none; border-radius: var(--radius-sm); cursor: pointer;">
+                                        💰 Simuler
+                                    </button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+        
+        function filterProfitabilityTable() {
+            const searchTerm = document.getElementById('searchProfitability')?.value || '';
+            const typeFilter = document.getElementById('filterProfitType')?.value || 'all';
+            const classFilter = document.getElementById('filterProfitClassification')?.value || 'all';
+            const sortBy = document.getElementById('sortProfitBy')?.value || 'margin-asc';
+            
+            // Analyser à nouveau avec filtres
+            const analysis = ProfitabilityService.analyzeProfitability(
+                appState.data.recipes || [],
+                appState.data.packs || [],
+                appState.data.ingredients || []
+            );
+            
+            let products = analysis.products;
+            
+            // Filtrer
+            products = ProfitabilityService.filterProducts(products, {
+                type: typeFilter,
+                classification: classFilter,
+                search: searchTerm
+            });
+            
+            // Trier
+            const [sortField, sortOrder] = sortBy.split('-');
+            products = ProfitabilityService.sortProducts(products, sortField, sortOrder);
+            
+            // Re-render table
+            document.getElementById('profitabilityTable').innerHTML = renderProfitabilityTable(products);
+        }
+        
+        // Placeholder pour simulateur de prix (à développer dans fonctionnalité 3)
+        window.showProductPriceSimulator = function(productId, productType) {
+            showToast('💡 Simulateur de prix - Bientôt disponible !', 'info');
+        };
+
         // Render recipe cards
         function renderRecipeCards(recipes) {
             return recipes.map(recipe => {
                 const capacity = RecipeService.calculateCapacity(recipe, appState.data.ingredients);
+                const cost = RecipeService.calculateCost(recipe, appState.data.ingredients);
+                const pricePerUnit = cost.totalCost / (recipe.producedQty || 1);
+                
+                // Calcul marge si prix de vente défini
+                const sellingPrice = recipe.sellingPrice || 0;
+                const margin = sellingPrice > 0 ? ((sellingPrice - pricePerUnit) / sellingPrice * 100) : 0;
+                const marginClass = margin < 0 ? 'danger' : margin < 25 ? 'warning' : margin < 50 ? 'info' : 'success';
                 
                 return `
                     <div class="ingredient-card">
@@ -2136,34 +2651,580 @@
                                 <h3 class="ingredient-name">${recipe.name}</h3>
                                 <span class="ingredient-category">${recipe.category || 'Sans catégorie'}</span>
                             </div>
+                            ${sellingPrice > 0 ? `
+                                <div class="alert-badge ${marginClass}">
+                                    ${margin >= 0 ? '📈' : '📉'} ${margin.toFixed(0)}%
+                                </div>
+                            ` : ''}
                         </div>
                         
                         <div class="ingredient-stats">
+                            <div class="stat-item">
+                                <span class="stat-label">Coût/unité</span>
+                                <span class="stat-value">${formatCurrency(pricePerUnit)}</span>
+                            </div>
                             <div class="stat-item">
                                 <span class="stat-label">Rendement</span>
                                 <span class="stat-value">${recipe.producedQty} ${recipe.producedUnit}</span>
                             </div>
                             <div class="stat-item">
-                                <span class="stat-label">Ingrédients</span>
-                                <span class="stat-value">${recipe.ingredients?.length || 0}</span>
-                            </div>
-                            <div class="stat-item">
                                 <span class="stat-label">Fabricable</span>
-                                <span class="stat-value">${capacity.batches} batch${capacity.batches > 1 ? 'es' : ''}</span>
+                                <span class="stat-value ${capacity.batches === 0 ? 'text-danger' : ''}">${capacity.batches} fois</span>
                             </div>
                         </div>
                         
+                        ${sellingPrice > 0 ? `
+                            <div style="background: var(--light); padding: 8px 12px; border-radius: 6px; font-size: 13px; margin-top: 8px;">
+                                💰 PV: ${formatCurrency(sellingPrice)} | 
+                                Marge: ${formatCurrency(sellingPrice - pricePerUnit)}
+                            </div>
+                        ` : ''}
+                        
                         <div class="ingredient-actions">
                             <button class="action-btn" onclick="showRecipeDetails('${recipe.id}')" title="Détails">👁️</button>
-                            <button class="action-btn" onclick="editRecipe('${recipe.id}')" title="Modifier">✏️</button>
+                            <button class="action-btn" onclick="showEditRecipeModal('${recipe.id}')" title="Modifier">✏️</button>
+                            <button class="action-btn" onclick="showProduceRecipeModal('${recipe.id}')" title="Produire">⚙️</button>
+                            <button class="action-btn" onclick="duplicateRecipe('${recipe.id}')" title="Dupliquer">📋</button>
                             <button class="action-btn" onclick="deleteRecipe('${recipe.id}')" title="Supprimer">🗑️</button>
-                            <button class="action-btn" onclick="alert('Produire - Bientôt')" title="Produire">⚙️</button>
                         </div>
                     </div>
                 `;
             }).join('');
         }
 
+        // ========================================
+        // CRUD RECETTES - COMPLET
+        // ========================================
+        
+        /**
+         * Affiche le modal d'édition d'une recette
+         */
+        window.showEditRecipeModal = function(recipeId) {
+            const recipe = appState.data.recipes.find(r => r.id === recipeId);
+            if (!recipe) {
+                showToast('❌ Recette introuvable', 'error');
+                return;
+            }
+            
+            const modal = document.createElement('div');
+            modal.id = 'editRecipeModal';
+            modal.className = 'modal';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 900px;">
+                    <div class="modal-header">
+                        <h2>✏️ Modifier la recette</h2>
+                        <button class="modal-close" onclick="closeModal('editRecipeModal')">✕</button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="editRecipeForm">
+                            <input type="hidden" name="recipeId" value="${recipe.id}">
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Nom de la recette *</label>
+                                    <input type="text" name="name" value="${recipe.name}" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Catégorie</label>
+                                    <select name="category">
+                                        <option value="">Aucune</option>
+                                        <option value="Pain" ${recipe.category === 'Pain' ? 'selected' : ''}>Pain</option>
+                                        <option value="Viennoiserie" ${recipe.category === 'Viennoiserie' ? 'selected' : ''}>Viennoiserie</option>
+                                        <option value="Pâtisserie" ${recipe.category === 'Pâtisserie' ? 'selected' : ''}>Pâtisserie</option>
+                                        <option value="Snacking" ${recipe.category === 'Snacking' ? 'selected' : ''}>Snacking</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Quantité produite *</label>
+                                    <input type="number" name="producedQty" value="${recipe.producedQty}" required min="1" step="1">
+                                </div>
+                                <div class="form-group">
+                                    <label>Unité *</label>
+                                    <select name="producedUnit">
+                                        <option value="pièce" ${recipe.producedUnit === 'pièce' ? 'selected' : ''}>pièce</option>
+                                        <option value="kg" ${recipe.producedUnit === 'kg' ? 'selected' : ''}>kg</option>
+                                        <option value="L" ${recipe.producedUnit === 'L' ? 'selected' : ''}>L</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Prix de vente unitaire</label>
+                                    <input type="number" name="sellingPrice" value="${recipe.sellingPrice || ''}" min="0" step="0.01" placeholder="Optionnel">
+                                    <small style="color: var(--gray);">Prix de vente par ${recipe.producedUnit}</small>
+                                </div>
+                            </div>
+                            
+                            <!-- Ingrédients -->
+                            <div style="margin-top: var(--space-lg);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-md);">
+                                    <h3>Ingrédients</h3>
+                                    <button type="button" class="btn btn-primary" onclick="addIngredientLineEdit()">
+                                        ➕ Ajouter ingrédient
+                                    </button>
+                                </div>
+                                
+                                <div id="ingredientsListEdit">
+                                    ${recipe.ingredients.map((ing, index) => {
+                                        const ingredient = appState.data.ingredients.find(i => i.id === ing.ingredientId);
+                                        return `
+                                            <div class="ingredient-line" data-index="${index}">
+                                                <select class="ingredient-select" name="ingredientId_${index}" required>
+                                                    <option value="">Sélectionner...</option>
+                                                    ${appState.data.ingredients.map(i => `
+                                                        <option value="${i.id}" ${i.id === ing.ingredientId ? 'selected' : ''}>
+                                                            ${i.name}
+                                                        </option>
+                                                    `).join('')}
+                                                </select>
+                                                <input type="number" name="quantity_${index}" value="${ing.quantity}" required min="0" step="0.01" placeholder="Quantité">
+                                                <select name="unit_${index}">
+                                                    <option value="g" ${ing.unit === 'g' ? 'selected' : ''}>g</option>
+                                                    <option value="kg" ${ing.unit === 'kg' ? 'selected' : ''}>kg</option>
+                                                    <option value="ml" ${ing.unit === 'ml' ? 'selected' : ''}>ml</option>
+                                                    <option value="L" ${ing.unit === 'L' ? 'selected' : ''}>L</option>
+                                                    <option value="pièce" ${ing.unit === 'pièce' ? 'selected' : ''}>pièce</option>
+                                                </select>
+                                                <button type="button" class="btn" style="background: var(--danger); color: white;" onclick="removeIngredientLineEdit(${index})">
+                                                    ✕
+                                                </button>
+                                            </div>
+                                        `;
+                                    }).join('')}
+                                </div>
+                            </div>
+                            
+                            <!-- Coût calculé -->
+                            <div id="costPreview" style="margin-top: var(--space-lg); padding: var(--space-md); background: var(--light); border-radius: var(--radius-md);">
+                                <div style="font-weight: 600; margin-bottom: var(--space-sm);">💰 Coût estimé</div>
+                                <div id="costDetails"></div>
+                            </div>
+                            
+                            <div style="display: flex; gap: var(--space-md); margin-top: var(--space-xl);">
+                                <button type="button" class="btn" style="flex: 1; background: var(--gray); color: white;" onclick="closeModal('editRecipeModal')">
+                                    Annuler
+                                </button>
+                                <button type="submit" class="btn btn-primary" style="flex: 1;">
+                                    💾 Enregistrer
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Calculer le coût initial
+            updateCostPreviewEdit();
+            
+            // Recalculer à chaque changement
+            modal.querySelectorAll('input, select').forEach(el => {
+                el.addEventListener('change', updateCostPreviewEdit);
+            });
+            
+            // Handle form submit
+            modal.querySelector('#editRecipeForm').addEventListener('submit', handleEditRecipe);
+        };
+        
+        let ingredientCounterEdit = 0;
+        
+        window.addIngredientLineEdit = function() {
+            const container = document.getElementById('ingredientsListEdit');
+            const index = ingredientCounterEdit++;
+            
+            const line = document.createElement('div');
+            line.className = 'ingredient-line';
+            line.dataset.index = index;
+            line.innerHTML = `
+                <select class="ingredient-select" name="ingredientId_${index}" required>
+                    <option value="">Sélectionner...</option>
+                    ${appState.data.ingredients.map(i => `
+                        <option value="${i.id}">${i.name}</option>
+                    `).join('')}
+                </select>
+                <input type="number" name="quantity_${index}" required min="0" step="0.01" placeholder="Quantité">
+                <select name="unit_${index}">
+                    <option value="g">g</option>
+                    <option value="kg">kg</option>
+                    <option value="ml">ml</option>
+                    <option value="L">L</option>
+                    <option value="pièce">pièce</option>
+                </select>
+                <button type="button" class="btn" style="background: var(--danger); color: white;" onclick="removeIngredientLineEdit(${index})">
+                    ✕
+                </button>
+            `;
+            
+            container.appendChild(line);
+            
+            // Recalculer le coût
+            line.querySelectorAll('input, select').forEach(el => {
+                el.addEventListener('change', updateCostPreviewEdit);
+            });
+        };
+        
+        window.removeIngredientLineEdit = function(index) {
+            const line = document.querySelector(`#ingredientsListEdit .ingredient-line[data-index="${index}"]`);
+            if (line) {
+                line.remove();
+                updateCostPreviewEdit();
+            }
+        };
+        
+        function updateCostPreviewEdit() {
+            const form = document.getElementById('editRecipeForm');
+            if (!form) return;
+            
+            const formData = new FormData(form);
+            const producedQty = Number(formData.get('producedQty')) || 1;
+            const sellingPrice = Number(formData.get('sellingPrice')) || 0;
+            
+            // Collecter les ingrédients
+            const ingredients = [];
+            const lines = document.querySelectorAll('#ingredientsListEdit .ingredient-line');
+            lines.forEach(line => {
+                const index = line.dataset.index;
+                const ingredientId = formData.get(`ingredientId_${index}`);
+                const quantity = Number(formData.get(`quantity_${index}`));
+                const unit = formData.get(`unit_${index}`);
+                
+                if (ingredientId && quantity) {
+                    ingredients.push({ ingredientId, quantity, unit });
+                }
+            });
+            
+            // Calculer le coût
+            let totalCost = 0;
+            ingredients.forEach(ing => {
+                const ingredient = appState.data.ingredients.find(i => i.id === ing.ingredientId);
+                if (!ingredient) return;
+                
+                const pricePerBaseUnit = ingredient.getPricePerBaseUnit ? ingredient.getPricePerBaseUnit() : 0;
+                
+                // Convertir en unité de base
+                let qtyInBaseUnit = ing.quantity;
+                if (ing.unit === 'kg' && ingredient.baseUnit === 'g') qtyInBaseUnit *= 1000;
+                if (ing.unit === 'L' && ingredient.baseUnit === 'ml') qtyInBaseUnit *= 1000;
+                if (ing.unit === 'g' && ingredient.baseUnit === 'kg') qtyInBaseUnit /= 1000;
+                if (ing.unit === 'ml' && ingredient.baseUnit === 'L') qtyInBaseUnit /= 1000;
+                
+                totalCost += pricePerBaseUnit * qtyInBaseUnit;
+            });
+            
+            const costPerUnit = totalCost / producedQty;
+            const margin = sellingPrice > 0 ? ((sellingPrice - costPerUnit) / sellingPrice * 100) : 0;
+            
+            document.getElementById('costDetails').innerHTML = `
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-md);">
+                    <div>
+                        <div style="font-size: 12px; color: var(--gray);">Coût total</div>
+                        <div style="font-size: 18px; font-weight: 700; color: var(--primary);">${formatCurrency(totalCost)}</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 12px; color: var(--gray);">Coût/unité</div>
+                        <div style="font-size: 18px; font-weight: 700; color: var(--warning);">${formatCurrency(costPerUnit)}</div>
+                    </div>
+                    ${sellingPrice > 0 ? `
+                        <div>
+                            <div style="font-size: 12px; color: var(--gray);">Marge</div>
+                            <div style="font-size: 18px; font-weight: 700; color: ${margin < 0 ? 'var(--danger)' : 'var(--success)'};">
+                                ${margin.toFixed(1)}%
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+        
+        async function handleEditRecipe(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const recipeId = formData.get('recipeId');
+            
+            // Collecter les ingrédients
+            const ingredients = [];
+            const lines = document.querySelectorAll('#ingredientsListEdit .ingredient-line');
+            lines.forEach(line => {
+                const index = line.dataset.index;
+                const ingredientId = formData.get(`ingredientId_${index}`);
+                const quantity = Number(formData.get(`quantity_${index}`));
+                const unit = formData.get(`unit_${index}`);
+                
+                if (ingredientId && quantity) {
+                    ingredients.push({ ingredientId, quantity, unit });
+                }
+            });
+            
+            if (ingredients.length === 0) {
+                showToast('❌ Ajoutez au moins un ingrédient', 'error');
+                return;
+            }
+            
+            const recipeData = {
+                name: formData.get('name'),
+                category: formData.get('category'),
+                producedQty: Number(formData.get('producedQty')),
+                producedUnit: formData.get('producedUnit'),
+                sellingPrice: Number(formData.get('sellingPrice')) || null,
+                ingredients: ingredients
+            };
+            
+            try {
+                // Trouver et mettre à jour la recette
+                const recipeIndex = appState.data.recipes.findIndex(r => r.id === recipeId);
+                if (recipeIndex === -1) {
+                    showToast('❌ Recette introuvable', 'error');
+                    return;
+                }
+                
+                // Mettre à jour en conservant l'ID
+                appState.data.recipes[recipeIndex] = {
+                    ...appState.data.recipes[recipeIndex],
+                    ...recipeData,
+                    updatedAt: new Date()
+                };
+                
+                saveData();
+                renderRecipesPage();
+                closeModal('editRecipeModal');
+                
+                showToast(`✅ Recette "${recipeData.name}" mise à jour !`, 'success');
+                
+            } catch (error) {
+                console.error('Edit recipe error:', error);
+                showToast('❌ Erreur : ' + error.message, 'error');
+            }
+        }
+        
+        /**
+         * Dupliquer une recette
+         */
+        window.duplicateRecipe = function(recipeId) {
+            const recipe = appState.data.recipes.find(r => r.id === recipeId);
+            if (!recipe) {
+                showToast('❌ Recette introuvable', 'error');
+                return;
+            }
+            
+            const newRecipe = {
+                ...recipe,
+                id: 'recipe_' + Date.now(),
+                name: recipe.name + ' (copie)',
+                createdAt: new Date(),
+                updatedAt: new Date()
+            };
+            
+            appState.data.recipes.push(newRecipe);
+            saveData();
+            renderRecipesPage();
+            
+            showToast(`✅ Recette "${newRecipe.name}" créée !`, 'success');
+        };
+        
+        /**
+         * Supprimer une recette
+         */
+        window.deleteRecipe = function(recipeId) {
+            const recipe = appState.data.recipes.find(r => r.id === recipeId);
+            if (!recipe) {
+                showToast('❌ Recette introuvable', 'error');
+                return;
+            }
+            
+            // Vérifier si utilisée dans des productions
+            const productions = appState.data.productions || [];
+            const usedInProductions = productions.filter(p => p.recipeId === recipeId);
+            
+            if (usedInProductions.length > 0) {
+                if (!confirm(`⚠️ Cette recette est utilisée dans ${usedInProductions.length} production(s). Supprimer quand même ?`)) {
+                    return;
+                }
+            }
+            
+            if (!confirm(`🗑️ Supprimer la recette "${recipe.name}" ?\n\nCette action est irréversible.`)) {
+                return;
+            }
+            
+            // Supprimer
+            appState.data.recipes = appState.data.recipes.filter(r => r.id !== recipeId);
+            saveData();
+            renderRecipesPage();
+            
+            showToast(`🗑️ Recette "${recipe.name}" supprimée`, 'success');
+        };
+        
+        /**
+         * Modal de production
+         */
+        window.showProduceRecipeModal = function(recipeId) {
+            const recipe = appState.data.recipes.find(r => r.id === recipeId);
+            if (!recipe) {
+                showToast('❌ Recette introuvable', 'error');
+                return;
+            }
+            
+            const capacity = RecipeService.calculateCapacity(recipe, appState.data.ingredients);
+            const cost = RecipeService.calculateCost(recipe, appState.data.ingredients);
+            
+            const modal = document.createElement('div');
+            modal.id = 'produceRecipeModal';
+            modal.className = 'modal';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 700px;">
+                    <div class="modal-header">
+                        <h2>⚙️ Produire : ${recipe.name}</h2>
+                        <button class="modal-close" onclick="closeModal('produceRecipeModal')">✕</button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Capacité -->
+                        <div style="background: ${capacity.batches === 0 ? '#fee' : '#e6f7ed'}; padding: var(--space-md); border-radius: var(--radius-md); margin-bottom: var(--space-lg); border-left: 4px solid ${capacity.batches === 0 ? 'var(--danger)' : 'var(--success)'};">
+                            <div style="font-weight: 600; margin-bottom: var(--space-sm);">
+                                ${capacity.batches === 0 ? '❌' : '✅'} Capacité de production
+                            </div>
+                            ${capacity.batches === 0 ? `
+                                <p style="margin: 0; color: var(--danger);">
+                                    Impossible de produire : stock insuffisant pour ${capacity.missingIngredients.length} ingrédient(s)
+                                </p>
+                                <ul style="margin-top: var(--space-sm); font-size: 13px;">
+                                    ${capacity.missingIngredients.map(ing => `
+                                        <li>${ing.name} : manque ${ing.missing} ${ing.unit}</li>
+                                    `).join('')}
+                                </ul>
+                            ` : `
+                                <p style="margin: 0; color: var(--success);">
+                                    Vous pouvez produire jusqu'à <strong>${capacity.batches} fois</strong> cette recette avec votre stock actuel
+                                </p>
+                            `}
+                        </div>
+                        
+                        ${capacity.batches > 0 ? `
+                            <form id="produceForm">
+                                <input type="hidden" name="recipeId" value="${recipe.id}">
+                                
+                                <div class="form-group">
+                                    <label>Nombre de fois à produire *</label>
+                                    <input type="number" name="batches" value="1" min="1" max="${capacity.batches}" required>
+                                    <small style="color: var(--gray);">Maximum : ${capacity.batches} fois</small>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>Date de production</label>
+                                    <input type="date" name="productionDate" value="${new Date().toISOString().split('T')[0]}" required>
+                                </div>
+                                
+                                <!-- Résumé -->
+                                <div id="productionSummary" style="background: var(--light); padding: var(--space-md); border-radius: var(--radius-md); margin-top: var(--space-md);">
+                                    <div style="font-weight: 600; margin-bottom: var(--space-sm);">📊 Résumé de production</div>
+                                    <div id="summaryDetails"></div>
+                                </div>
+                                
+                                <div style="display: flex; gap: var(--space-md); margin-top: var(--space-xl);">
+                                    <button type="button" class="btn" style="flex: 1; background: var(--gray); color: white;" onclick="closeModal('produceRecipeModal')">
+                                        Annuler
+                                    </button>
+                                    <button type="submit" class="btn btn-primary" style="flex: 1;">
+                                        ⚙️ Lancer la production
+                                    </button>
+                                </div>
+                            </form>
+                        ` : `
+                            <button class="btn" style="width: 100%; background: var(--gray); color: white;" onclick="closeModal('produceRecipeModal')">
+                                Fermer
+                            </button>
+                        `}
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            if (capacity.batches > 0) {
+                // Mettre à jour le résumé
+                const batchesInput = modal.querySelector('input[name="batches"]');
+                updateProductionSummary();
+                
+                batchesInput.addEventListener('input', updateProductionSummary);
+                
+                function updateProductionSummary() {
+                    const batches = Number(batchesInput.value) || 1;
+                    const totalProduced = recipe.producedQty * batches;
+                    const totalCost = cost.totalCost * batches;
+                    
+                    document.getElementById('summaryDetails').innerHTML = `
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-md);">
+                            <div>
+                                <div style="font-size: 12px; color: var(--gray);">Quantité produite</div>
+                                <div style="font-size: 20px; font-weight: 700; color: var(--primary);">
+                                    ${totalProduced} ${recipe.producedUnit}
+                                </div>
+                            </div>
+                            <div>
+                                <div style="font-size: 12px; color: var(--gray);">Coût total</div>
+                                <div style="font-size: 20px; font-weight: 700; color: var(--warning);">
+                                    ${formatCurrency(totalCost)}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                // Handle form submit
+                modal.querySelector('#produceForm').addEventListener('submit', handleProduceRecipe);
+            }
+        };
+        
+        async function handleProduceRecipe(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const recipeId = formData.get('recipeId');
+            const batches = Number(formData.get('batches'));
+            const productionDate = formData.get('productionDate');
+            
+            const recipe = appState.data.recipes.find(r => r.id === recipeId);
+            if (!recipe) {
+                showToast('❌ Recette introuvable', 'error');
+                return;
+            }
+            
+            try {
+                // Utiliser ProductionService pour produire
+                const result = ProductionService.produce(
+                    recipe,
+                    batches,
+                    productionDate,
+                    appState.data.ingredients
+                );
+                
+                if (!result.success) {
+                    showToast('❌ ' + result.error, 'error');
+                    return;
+                }
+                
+                // Ajouter la production
+                const production = result.production;
+                appState.data.productions = appState.data.productions || [];
+                appState.data.productions.push(production);
+                
+                // Mettre à jour les ingrédients
+                appState.data.ingredients = result.ingredients;
+                
+                saveData();
+                closeModal('produceRecipeModal');
+                renderRecipesPage();
+                
+                const totalProduced = recipe.producedQty * batches;
+                showToast(`✅ Production terminée : ${totalProduced} ${recipe.producedUnit} de "${recipe.name}"`, 'success');
+                
+            } catch (error) {
+                console.error('Production error:', error);
+                showToast('❌ Erreur : ' + error.message, 'error');
+            }
+        }
+        
         // ========================================
         // PRODUCTIONS PAGE
         // ========================================
@@ -2363,14 +3424,14 @@
                             <!-- Informations optionnelles -->
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label>Opérateur * <span style="color: var(--danger); font-weight: bold;">OBLIGATOIRE</span></label>
-                                    <select name="operator" required>
+                                    <label>Opérateur (optionnel)</label>
+                                    <select name="operator">
                                         <option value="">Qui produit ?</option>
                                         ${(appState.data.staff || []).filter(s => s.active).map(s => `
                                             <option value="${s.name}">${s.name} (${s.role})</option>
                                         `).join('')}
                                     </select>
-                                    <small style="color: var(--gray);">Responsable de cette production (traçabilité HACCP)</small>
+                                    <small style="color: var(--gray);">Responsable de cette production (optionnel, traçabilité HACCP)</small>
                                 </div>
                                 <div class="form-group">
                                     <label>Notes</label>
@@ -2590,12 +3651,6 @@
             const multiplier = Number(formData.get('multiplier'));
             const operator = formData.get('operator') || '';
             const notes = formData.get('notes') || '';
-            
-            // Validation opérateur obligatoire
-            if (!operator) {
-                showToast('❌ Opérateur obligatoire pour traçabilité HACCP', 'error');
-                return;
-            }
             
             const recipe = appState.data.recipes.find(r => r.id === recipeId);
             if (!recipe) {
@@ -2863,7 +3918,7 @@
                                     <small id="stockAvailable" style="color: var(--gray);"></small>
                                 </div>
                                 <div class="form-group">
-                                    <label>Prix unitaire (FCFA) *</label>
+                                    <label>Prix unitaire (EUR/€) *</label>
                                     <input type="number" id="saleUnitPrice" required min="0" step="1" 
                                            placeholder="Prix de vente" oninput="updateSalePreview()">
                                     <small id="suggestedPrice" style="color: var(--info);"></small>
@@ -3357,6 +4412,8 @@
             const packs = appState.data.packs || [];
             const recipes = appState.data.recipes || [];
             const ingredients = appState.data.ingredients || [];
+            const productions = appState.data.productions || [];
+            const settings = appState.data.settings || { overheadCoefficient: 1.0, showDirectCost: true };
             
             let html = `
                 <div class="page-container">
@@ -3384,16 +4441,45 @@
                         </div>
                         <div class="ingredients-list">
                             ${packs.map(pack => {
-                                const cost = pack.getCost ? pack.getCost(recipes, ingredients) : 0;
+                                const costResult = pack.getCost ? pack.getCost(recipes, ingredients, settings) : 0;
+                                
+                                // Gérer coût simple ou détaillé
+                                let cost, directCost, coefficient;
+                                if (typeof costResult === 'object' && costResult.total !== undefined) {
+                                    cost = costResult.total;
+                                    directCost = costResult.direct;
+                                    coefficient = costResult.coefficient;
+                                } else {
+                                    cost = costResult;
+                                    directCost = costResult;
+                                    coefficient = 1.0;
+                                }
+                                
                                 const margin = pack.price - cost;
                                 const marginPercent = pack.price > 0 ? (margin / pack.price) * 100 : 0;
-                                const hasStock = pack.hasStock ? pack.hasStock(recipes, ingredients) : false;
+                                const hasStock = pack.hasStock ? pack.hasStock(productions, 1) : false;
+                                
+                                // 🛡️ INDICATEURS RENTABILITÉ
+                                let profitBadge = '';
+                                let cardClass = 'ingredient-card';
+                                
+                                if (margin < 0) {
+                                    // PERTE
+                                    profitBadge = '<span style="background: var(--danger); color: white; padding: 4px 12px; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">🔴 PERTE</span>';
+                                    cardClass += ' loss-warning';
+                                } else if (marginPercent < 10) {
+                                    // FAIBLE MARGE
+                                    profitBadge = '<span style="background: var(--warning); color: white; padding: 4px 12px; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">🟡 FAIBLE MARGE</span>';
+                                } else {
+                                    // RENTABLE
+                                    profitBadge = '<span style="background: var(--success); color: white; padding: 4px 12px; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">🟢 RENTABLE</span>';
+                                }
                                 
                                 return `
-                                    <div class="ingredient-card">
+                                    <div class="${cardClass}">
                                         <div class="ingredient-header">
                                             <div>
-                                                <h3 class="ingredient-name">${pack.name}</h3>
+                                                <h3 class="ingredient-name">${pack.name} ${profitBadge}</h3>
                                                 <p class="ingredient-meta">
                                                     ${pack.items ? pack.items.length : 0} produit${(pack.items && pack.items.length > 1) ? 's' : ''}
                                                     ${pack.description ? ' • ' + pack.description : ''}
@@ -3408,17 +4494,32 @@
                                                 <span class="stat-label">Prix</span>
                                                 <span class="stat-value">${formatCurrency(pack.price)}</span>
                                             </div>
-                                            <div class="stat-item">
-                                                <span class="stat-label">Coût</span>
-                                                <span class="stat-value">${formatCurrency(cost)}</span>
-                                            </div>
+                                            ${settings.showDirectCost && directCost !== cost ? `
+                                                <div class="stat-item">
+                                                    <span class="stat-label">Coût direct</span>
+                                                    <span class="stat-value" style="font-size: 0.9em; color: var(--gray);">${formatCurrency(directCost)}</span>
+                                                </div>
+                                                <div class="stat-item">
+                                                    <span class="stat-label">Coût total (×${coefficient.toFixed(2)})</span>
+                                                    <span class="stat-value">${formatCurrency(cost)}</span>
+                                                </div>
+                                            ` : `
+                                                <div class="stat-item">
+                                                    <span class="stat-label">Coût</span>
+                                                    <span class="stat-value">${formatCurrency(cost)}</span>
+                                                </div>
+                                            `}
                                             <div class="stat-item">
                                                 <span class="stat-label">Marge</span>
-                                                <span class="stat-value">${formatCurrency(margin)}</span>
+                                                <span class="stat-value" style="color: ${margin < 0 ? 'var(--danger)' : 'var(--success)'}">
+                                                    ${margin < 0 ? '-' : '+'}${formatCurrency(Math.abs(margin))}
+                                                </span>
                                             </div>
                                             <div class="stat-item">
                                                 <span class="stat-label">Marge %</span>
-                                                <span class="stat-value">${marginPercent.toFixed(1)}%</span>
+                                                <span class="stat-value" style="color: ${marginPercent < 0 ? 'var(--danger)' : marginPercent < 10 ? 'var(--warning)' : 'var(--success)'}; font-weight: 700;">
+                                                    ${marginPercent.toFixed(1)}%
+                                                </span>
                                             </div>
                                             <div class="stat-item">
                                                 <span class="stat-label">Stock</span>
@@ -3499,12 +4600,27 @@
                                     </div>
                                 </div>
                             </div>
-                            <button type="button" class="btn" onclick="addPackItem()" style="margin-top: var(--space-md);">
+                            <button type="button" class="btn" onclick="addPackItem(); updateSuggestedPackPrice();" style="margin-top: var(--space-md);">
                                 ➕ Ajouter Produit
                             </button>
-                            <div class="form-group" style="margin-top: var(--space-lg);">
-                                <label>Prix de vente du pack (FCFA) *</label>
-                                <input type="number" id="packPrice" required min="0" step="1" placeholder="Prix total du pack">
+                            <div style="margin-top: var(--space-lg); padding: var(--space-md); background: var(--light); border-radius: var(--radius-md);">
+                                <div class="form-row">
+                                    <div class="form-group" style="flex: 1;">
+                                        <label>Prix de vente (EUR/€) *</label>
+                                        <input type="number" id="packPrice" required min="0" step="0.01" placeholder="0.00" oninput="checkPackProfitability()">
+                                        <div id="profitabilityIndicator" style="margin-top: var(--space-xs); font-size: 0.875rem; font-weight: 600;"></div>
+                                    </div>
+                                    <div class="form-group" style="flex: 1;">
+                                        <label>Prix suggéré (marge 30%)</label>
+                                        <div style="display: flex; align-items: center; gap: var(--space-sm);">
+                                            <input type="text" id="suggestedPackPrice" value="Calculer..." readonly style="background: var(--white); cursor: not-allowed; flex: 1;">
+                                            <button type="button" class="btn btn-sm" style="background: var(--success);" onclick="applySuggestedPackPrice()">Appliquer</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-sm" style="margin-top: var(--space-sm); background: var(--info);" onclick="updateSuggestedPackPrice()">
+                                    🔄 Recalculer prix suggéré
+                                </button>
                             </div>
                             <div style="display: flex; gap: var(--space-md); margin-top: var(--space-xl);">
                                 <button type="button" class="btn" style="flex: 1;" onclick="closeModal('newPackModal')">Annuler</button>
@@ -3553,8 +4669,182 @@
             const row = document.querySelector('[data-index="' + index + '"]');
             if (row && document.querySelectorAll('.pack-item-row').length > 1) {
                 row.remove();
+                // Recalculer prix suggéré après suppression
+                if (typeof updateSuggestedPackPrice === 'function') {
+                    updateSuggestedPackPrice();
+                }
             } else {
                 showToast('⚠️ Un pack doit contenir au moins 1 produit', 'warning');
+            }
+        };
+        
+        // Fonction pour calculer et afficher le prix suggéré
+        window.updateSuggestedPackPrice = function() {
+            const recipes = appState.data.recipes || [];
+            const ingredients = appState.data.ingredients || [];
+            const settings = appState.data.settings || { overheadCoefficient: 1.0 };
+            
+            // Déterminer quel modal est ouvert
+            const suggestedPriceField = document.getElementById('suggestedPackPrice');
+            if (!suggestedPriceField) return; // Pas de modal ouvert
+            
+            // Récupérer les items sélectionnés
+            const items = [];
+            const container = document.getElementById('packItemsContainer') || document.getElementById('editPackItemsContainer');
+            if (!container) return;
+            
+            container.querySelectorAll('.pack-item-row').forEach(row => {
+                const productSelect = row.querySelector('.pack-item-product');
+                const quantity = Number(row.querySelector('.pack-item-quantity').value);
+                if (productSelect && productSelect.value && quantity > 0) {
+                    const option = productSelect.options[productSelect.selectedIndex];
+                    items.push({
+                        productionId: productSelect.value,
+                        productionName: option.getAttribute('data-name'),
+                        quantity: quantity,
+                        unit: option.getAttribute('data-unit')
+                    });
+                }
+            });
+            
+            if (items.length === 0) {
+                suggestedPriceField.value = 'Ajouter des produits...';
+                window.currentSuggestedPrice = 0;
+                return;
+            }
+            
+            // Créer un pack temporaire pour calculer le coût
+            try {
+                const tempPack = new Pack({
+                    id: 'temp',
+                    name: 'temp',
+                    description: '',
+                    items: items.map(item => new PackItem(item)),
+                    price: 0,
+                    active: true,
+                    createdAt: new Date()
+                });
+                
+                const suggestedPrice = tempPack.getSuggestedPrice(recipes, ingredients, 30, settings);
+                const costResult = tempPack.getCost(recipes, ingredients, settings);
+                
+                // Affichage avec détails si coefficient actif
+                if (typeof costResult === 'object' && costResult.coefficient > 1) {
+                    suggestedPriceField.value = formatCurrency(suggestedPrice) + 
+                        ` (coût: ${formatCurrency(costResult.direct)} ×${costResult.coefficient.toFixed(2)} = ${formatCurrency(costResult.total)})`;
+                } else {
+                    suggestedPriceField.value = formatCurrency(suggestedPrice);
+                }
+                
+                window.currentSuggestedPrice = suggestedPrice;
+            } catch (error) {
+                suggestedPriceField.value = 'Erreur calcul';
+                window.currentSuggestedPrice = 0;
+                console.error('Erreur calcul prix suggéré:', error);
+            }
+        };
+        
+        // Fonction pour appliquer le prix suggéré
+        window.applySuggestedPackPrice = function() {
+            if (window.currentSuggestedPrice && window.currentSuggestedPrice > 0) {
+                // Déterminer quel champ prix utiliser
+                const priceField = document.getElementById('packPrice') || document.getElementById('editPackPrice');
+                if (priceField) {
+                    priceField.value = window.currentSuggestedPrice.toFixed(2);
+                    showToast('✅ Prix suggéré appliqué', 'success');
+                    
+                    // Mettre à jour l'indicateur si disponible
+                    if (typeof checkPackProfitability === 'function') {
+                        checkPackProfitability();
+                    }
+                }
+            } else {
+                showToast('⚠️ Calculez d\'abord le prix suggéré', 'warning');
+            }
+        };
+        
+        // 🛡️ Fonction pour vérifier rentabilité en temps réel
+        window.checkPackProfitability = function() {
+            const indicator = document.getElementById('profitabilityIndicator');
+            if (!indicator) return;
+            
+            const priceField = document.getElementById('packPrice');
+            if (!priceField) return;
+            
+            const price = Number(priceField.value);
+            if (!price || price <= 0) {
+                indicator.innerHTML = '';
+                return;
+            }
+            
+            const recipes = appState.data.recipes || [];
+            const ingredients = appState.data.ingredients || [];
+            const settings = appState.data.settings || { overheadCoefficient: 1.0 };
+            
+            // Récupérer items actuels
+            const items = [];
+            const container = document.getElementById('packItemsContainer');
+            if (!container) return;
+            
+            container.querySelectorAll('.pack-item-row').forEach(row => {
+                const productSelect = row.querySelector('.pack-item-product');
+                const quantity = Number(row.querySelector('.pack-item-quantity').value);
+                if (productSelect && productSelect.value && quantity > 0) {
+                    const option = productSelect.options[productSelect.selectedIndex];
+                    items.push({
+                        productionId: productSelect.value,
+                        productionName: option.getAttribute('data-name'),
+                        quantity: quantity,
+                        unit: option.getAttribute('data-unit')
+                    });
+                }
+            });
+            
+            if (items.length === 0) {
+                indicator.innerHTML = '⚠️ Ajoutez des produits pour calculer';
+                indicator.style.color = 'var(--warning)';
+                return;
+            }
+            
+            // Calculer coût
+            try {
+                const tempPack = new Pack({
+                    id: 'temp',
+                    name: 'temp',
+                    description: '',
+                    items: items.map(item => new PackItem(item)),
+                    price: price,
+                    active: true,
+                    createdAt: new Date()
+                });
+                
+                const costResult = tempPack.getCost(recipes, ingredients, settings);
+                const cost = typeof costResult === 'object' ? costResult.total : costResult;
+                const directCost = typeof costResult === 'object' ? costResult.direct : costResult;
+                const coefficient = typeof costResult === 'object' ? costResult.coefficient : 1.0;
+                
+                const margin = price - cost;
+                const marginPercent = price > 0 ? (margin / price) * 100 : 0;
+                
+                // Affichage avec détails coefficient
+                let costInfo = '';
+                if (coefficient > 1) {
+                    costInfo = ` (direct: ${directCost.toFixed(2)}€ ×${coefficient.toFixed(2)})`;
+                }
+                
+                if (margin < 0) {
+                    indicator.innerHTML = `🔴 PERTE: ${Math.abs(margin).toFixed(2)} € (${Math.abs(marginPercent).toFixed(1)}%)${costInfo}`;
+                    indicator.style.color = 'var(--danger)';
+                } else if (marginPercent < 10) {
+                    indicator.innerHTML = `🟡 Marge faible: +${margin.toFixed(2)} € (${marginPercent.toFixed(1)}%)${costInfo}`;
+                    indicator.style.color = 'var(--warning)';
+                } else {
+                    indicator.innerHTML = `🟢 Rentable: +${margin.toFixed(2)} € (${marginPercent.toFixed(1)}%)${costInfo}`;
+                    indicator.style.color = 'var(--success)';
+                }
+            } catch (error) {
+                indicator.innerHTML = '⚠️ Erreur calcul';
+                indicator.style.color = 'var(--danger)';
             }
         };
         
@@ -3579,28 +4869,50 @@
                 }
             });
             
-            if (items.length === 0) {
-                showToast('❌ Ajoutez au moins un produit au pack', 'error');
-                return;
+            const recipes = appState.data.recipes || [];
+            const ingredients = appState.data.ingredients || [];
+            
+            // Fonction pour créer le pack
+            function createPack(allowLoss = false) {
+                try {
+                    const newPack = PackService.create({
+                        name,
+                        description,
+                        items,
+                        price,
+                        allowLoss
+                    }, recipes, ingredients);
+                    
+                    appState.data.packs = appState.data.packs || [];
+                    appState.data.packs.push(newPack);
+                    saveData();
+                    closeModal('newPackModal');
+                    renderPacksPage();
+                    showToast('✅ Pack "' + name + '" créé !', 'success');
+                } catch (error) {
+                    // Si c'est une alerte de perte
+                    if (error.message.includes('ALERTE PERTE')) {
+                        // Afficher confirmation
+                        if (confirm(
+                            error.message + '\n\n' +
+                            '⚠️ Voulez-vous créer ce pack MALGRÉ la perte ?\n\n' +
+                            'Ceci peut être justifié pour:\n' +
+                            '• Offres promotionnelles\n' +
+                            '• Liquidation de stock\n' +
+                            '• Stratégie commerciale spécifique'
+                        )) {
+                            // Créer avec allowLoss = true
+                            createPack(true);
+                        }
+                    } else {
+                        // Autre erreur
+                        showToast('❌ ' + error.message, 'error');
+                    }
+                }
             }
             
-            // Créer Pack instance avec classe Pack
-            const newPack = new Pack({
-                id: 'pack_' + Date.now(),
-                name: name,
-                description: description,
-                items: items.map(item => new PackItem(item)),
-                price: price,
-                active: true,
-                createdAt: new Date()
-            });
-            
-            appState.data.packs = appState.data.packs || [];
-            appState.data.packs.push(newPack);
-            saveData();
-            closeModal('newPackModal');
-            renderPacksPage();
-            showToast('✅ Pack "' + name + '" créé !', 'success');
+            // Lancer la création
+            createPack(false);
         }
         
         window.togglePackStatus = function(packId) {
@@ -3614,7 +4926,199 @@
         };
         
         window.editPack = function(packId) {
-            showToast('🚧 Modification pack - En développement', 'info');
+            const pack = appState.data.packs.find(p => p.id === packId);
+            if (!pack) {
+                showToast('❌ Pack introuvable', 'error');
+                return;
+            }
+            
+            const recipes = appState.data.recipes || [];
+            const ingredients = appState.data.ingredients || [];
+            
+            if (recipes.length === 0) {
+                showToast('❌ Aucune recette disponible', 'error');
+                return;
+            }
+            
+            // Calculer prix suggéré
+            const suggestedPrice = pack.getSuggestedPrice(recipes, ingredients, 30);
+            
+            const modal = document.createElement('div');
+            modal.id = 'editPackModal';
+            modal.className = 'modal';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 900px;">
+                    <div class="modal-header">
+                        <h2>✏️ Modifier Pack</h2>
+                        <button class="modal-close" onclick="closeModal('editPackModal')">✕</button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="editPackForm">
+                            <div class="form-group">
+                                <label>Nom du pack *</label>
+                                <input type="text" id="editPackName" required placeholder="Ex: Pack Petit-Déjeuner" value="${pack.name}">
+                            </div>
+                            <div class="form-group">
+                                <label>Description</label>
+                                <textarea id="editPackDescription" rows="2" placeholder="Description du pack">${pack.description || ''}</textarea>
+                            </div>
+                            <h3 style="margin-top: var(--space-lg);">Produits inclus</h3>
+                            <div id="editPackItemsContainer">
+                                ${pack.items.map((item, index) => `
+                                    <div class="pack-item-row" data-index="${index}">
+                                        <div class="form-row" style="align-items: flex-end;">
+                                            <div class="form-group" style="flex: 2;">
+                                                <label>Produit</label>
+                                                <select class="pack-item-product" required>
+                                                    <option value="">Sélectionner...</option>
+                                                    ${recipes.map(r => `
+                                                        <option value="${r.id}" 
+                                                            data-name="${r.name}" 
+                                                            data-unit="${r.producedUnit}"
+                                                            ${r.id === item.productionId ? 'selected' : ''}>
+                                                            ${r.name}
+                                                        </option>
+                                                    `).join('')}
+                                                </select>
+                                            </div>
+                                            <div class="form-group" style="flex: 1;">
+                                                <label>Quantité</label>
+                                                <input type="number" class="pack-item-quantity" required min="1" step="1" value="${item.quantity}">
+                                            </div>
+                                            <button type="button" class="btn" style="background: var(--danger);" onclick="removePackItem(${index})">❌</button>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <button type="button" class="btn" style="margin-top: var(--space-sm); background: var(--info);" onclick="addPackItemToEdit()">➕ Ajouter Produit</button>
+                            <div style="margin-top: var(--space-lg); padding: var(--space-md); background: var(--light); border-radius: var(--radius-md);">
+                                <div class="form-row">
+                                    <div class="form-group" style="flex: 1;">
+                                        <label>Prix de vente *</label>
+                                        <input type="number" id="editPackPrice" required min="0" step="0.01" value="${pack.price}">
+                                    </div>
+                                    <div class="form-group" style="flex: 1;">
+                                        <label>Prix suggéré (marge 30%)</label>
+                                        <div style="display: flex; align-items: center; gap: var(--space-sm);">
+                                            <input type="text" value="${formatCurrency(suggestedPrice)}" readonly style="background: var(--white); cursor: not-allowed;">
+                                            <button type="button" class="btn btn-sm" style="background: var(--success);" onclick="document.getElementById('editPackPrice').value = ${suggestedPrice}">Appliquer</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label style="display: flex; align-items: center; gap: var(--space-sm); cursor: pointer;">
+                                    <input type="checkbox" id="editPackActive" ${pack.active ? 'checked' : ''}>
+                                    <span>Pack actif (visible pour vente)</span>
+                                </label>
+                            </div>
+                            <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: var(--space-sm);">
+                                <button type="button" class="btn" onclick="closeModal('editPackModal')">Annuler</button>
+                                <button type="submit" class="btn btn-primary">💾 Enregistrer</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            
+            // Gestion du formulaire
+            document.getElementById('editPackForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const name = document.getElementById('editPackName').value;
+                const description = document.getElementById('editPackDescription').value;
+                const price = Number(document.getElementById('editPackPrice').value);
+                const active = document.getElementById('editPackActive').checked;
+                
+                const items = [];
+                document.querySelectorAll('#editPackItemsContainer .pack-item-row').forEach(row => {
+                    const productSelect = row.querySelector('.pack-item-product');
+                    const quantity = Number(row.querySelector('.pack-item-quantity').value);
+                    if (productSelect.value) {
+                        const option = productSelect.options[productSelect.selectedIndex];
+                        items.push({
+                            productionId: productSelect.value,
+                            productionName: option.getAttribute('data-name'),
+                            quantity: quantity,
+                            unit: option.getAttribute('data-unit')
+                        });
+                    }
+                });
+                
+                // Fonction pour mettre à jour le pack
+                function updatePack(allowLoss = false) {
+                    try {
+                        PackService.update(
+                            pack, 
+                            { name, description, price, items, active }, 
+                            recipes,
+                            ingredients,
+                            allowLoss
+                        );
+                        saveData();
+                        closeModal('editPackModal');
+                        renderPacksPage();
+                        showToast('✅ Pack "' + name + '" modifié !', 'success');
+                    } catch (error) {
+                        // Si c'est une alerte de perte
+                        if (error.message.includes('ALERTE PERTE')) {
+                            // Afficher confirmation
+                            if (confirm(
+                                error.message + '\n\n' +
+                                '⚠️ Voulez-vous modifier ce pack MALGRÉ la perte ?\n\n' +
+                                'Ceci peut être justifié pour:\n' +
+                                '• Offres promotionnelles\n' +
+                                '• Liquidation de stock\n' +
+                                '• Stratégie commerciale spécifique'
+                            )) {
+                                // Modifier avec allowLoss = true
+                                updatePack(true);
+                            }
+                        } else {
+                            // Autre erreur
+                            showToast('❌ ' + error.message, 'error');
+                        }
+                    }
+                }
+                
+                // Lancer la mise à jour
+                updatePack(false);
+            });
+            
+            setTimeout(() => modal.classList.add('active'), 10);
+        };
+        
+        // Ajouter produit en mode édition
+        let editPackItemIndex = 1000; // Éviter conflits avec index création
+        window.addPackItemToEdit = function() {
+            const recipes = appState.data.recipes || [];
+            const container = document.getElementById('editPackItemsContainer');
+            const newRow = document.createElement('div');
+            newRow.className = 'pack-item-row';
+            newRow.setAttribute('data-index', editPackItemIndex);
+            newRow.innerHTML = `
+                <div class="form-row" style="align-items: flex-end;">
+                    <div class="form-group" style="flex: 2;">
+                        <label>Produit</label>
+                        <select class="pack-item-product" required>
+                            <option value="">Sélectionner...</option>
+                            ${recipes.map(r => `
+                                <option value="${r.id}" data-name="${r.name}" data-unit="${r.producedUnit}">
+                                    ${r.name}
+                                </option>
+                            `).join('')}
+                        </select>
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label>Quantité</label>
+                        <input type="number" class="pack-item-quantity" required min="1" step="1" value="1">
+                    </div>
+                    <button type="button" class="btn" style="background: var(--danger);" onclick="removePackItem(${editPackItemIndex})">❌</button>
+                </div>
+            `;
+            container.appendChild(newRow);
+            editPackItemIndex++;
         };
         
         window.deletePack = function(packId) {
@@ -3731,9 +5235,9 @@
                             </div>
                             
                             <div id="recipeCostDisplay" style="background: var(--light); padding: var(--space-md); border-radius: var(--radius-md); margin-top: var(--space-md); display: none;">
-                                <strong>Coût total estimé :</strong> <span id="recipeTotalCost">0 FCFA</span>
+                                <strong>Coût total estimé :</strong> <span id="recipeTotalCost">0 €</span>
                                 <br>
-                                <strong>Coût unitaire :</strong> <span id="recipeUnitCost">0 FCFA</span>
+                                <strong>Coût unitaire :</strong> <span id="recipeUnitCost">0 €</span>
                             </div>
                             
                             <div style="display: flex; gap: var(--space-md); margin-top: var(--space-lg);">
@@ -4174,6 +5678,15 @@
             // Refresh list
             document.getElementById('categoriesList').innerHTML = renderCategoriesList();
             
+            // NOUVEAU : Rafraîchir le dropdown catégories dans le formulaire d'ajout d'ingrédient
+            const categorySelect = document.querySelector('#addIngredientForm select[name="category"]');
+            if (categorySelect) {
+                categorySelect.innerHTML = `
+                    <option value="">Aucune catégorie</option>
+                    ${getCategoriesOptions()}
+                `;
+            }
+            
             showToast('✅ Catégorie ajoutée !', 'success');
         }
         
@@ -4346,33 +5859,610 @@
         // Show Add Ingredient Modal
         window.showAddIngredientModal = function() {
             const modal = document.getElementById('addIngredientModal');
-            if (modal) modal.classList.remove('hidden');
+            if (modal) {
+                modal.classList.remove('hidden');
+                
+                // Initialiser l'auto-complétion
+                initIngredientAutocomplete();
+            }
+        };
+        
+        /**
+         * Initialise l'auto-complétion sur le champ nom d'ingrédient
+         */
+        function initIngredientAutocomplete() {
+            const input = document.getElementById('ingredientNameInput');
+            const suggestionsBox = document.getElementById('ingredientSuggestions');
+            
+            if (!input || !suggestionsBox) return;
+            
+            let selectedIndex = -1;
+            
+            input.addEventListener('input', function(e) {
+                const query = e.target.value.trim().toLowerCase();
+                
+                if (query.length < 2) {
+                    suggestionsBox.style.display = 'none';
+                    return;
+                }
+                
+                // Chercher dans la base d'ingrédients
+                const matches = IngredientDatabaseCore.ingredients.filter(ing => 
+                    ing.name.toLowerCase().includes(query)
+                ).slice(0, 10); // Max 10 suggestions
+                
+                if (matches.length === 0) {
+                    suggestionsBox.style.display = 'none';
+                    return;
+                }
+                
+                // Afficher les suggestions
+                suggestionsBox.innerHTML = matches.map((ing, index) => `
+                    <div class="suggestion-item" data-index="${index}" style="
+                        padding: 12px 16px;
+                        cursor: pointer;
+                        border-bottom: 1px solid var(--light);
+                        transition: background 0.2s;
+                    " onmouseover="this.style.background='var(--light)'" onmouseout="this.style.background='white'" onclick="selectIngredientSuggestion(${index})">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <strong style="color: var(--primary);">${ing.name}</strong>
+                                <span style="color: var(--gray); font-size: 13px; margin-left: 8px;">${ing.category}</span>
+                            </div>
+                            <div style="text-align: right; font-size: 12px;">
+                                <div style="color: var(--success); font-weight: 600;">Rendement : ${ing.yieldPercent}%</div>
+                                <div style="color: var(--gray);">${ing.wasteType || 'Aucun déchet'}</div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+                
+                suggestionsBox.style.display = 'block';
+                selectedIndex = -1;
+                
+                // Stocker les suggestions pour la sélection au clavier
+                suggestionsBox.dataset.suggestions = JSON.stringify(matches);
+            });
+            
+            // Navigation au clavier
+            input.addEventListener('keydown', function(e) {
+                const items = suggestionsBox.querySelectorAll('.suggestion-item');
+                
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    selectedIndex = Math.min(selectedIndex + 1, items.length - 1);
+                    highlightSuggestion(items, selectedIndex);
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    selectedIndex = Math.max(selectedIndex - 1, 0);
+                    highlightSuggestion(items, selectedIndex);
+                } else if (e.key === 'Enter' && selectedIndex >= 0) {
+                    e.preventDefault();
+                    selectIngredientSuggestion(selectedIndex);
+                } else if (e.key === 'Escape') {
+                    suggestionsBox.style.display = 'none';
+                    selectedIndex = -1;
+                }
+            });
+            
+            // Fermer les suggestions si clic ailleurs
+            document.addEventListener('click', function(e) {
+                if (!input.contains(e.target) && !suggestionsBox.contains(e.target)) {
+                    suggestionsBox.style.display = 'none';
+                }
+            });
+        }
+        
+        /**
+         * Met en surbrillance une suggestion
+         */
+        function highlightSuggestion(items, index) {
+            items.forEach((item, i) => {
+                if (i === index) {
+                    item.style.background = 'var(--primary)';
+                    item.style.color = 'white';
+                } else {
+                    item.style.background = 'white';
+                    item.style.color = 'inherit';
+                }
+            });
+        }
+        
+        /**
+         * Sélectionne une suggestion et pré-remplit le formulaire
+         */
+        window.selectIngredientSuggestion = function(index) {
+            const suggestionsBox = document.getElementById('ingredientSuggestions');
+            const suggestions = JSON.parse(suggestionsBox.dataset.suggestions || '[]');
+            const selected = suggestions[index];
+            
+            if (!selected) return;
+            
+            // Pré-remplir le formulaire
+            document.getElementById('ingredientNameInput').value = selected.name;
+            document.querySelector('select[name="category"]').value = selected.category || '';
+            document.querySelector('input[name="baseUnit"]').value = selected.baseUnit || 'g';
+            document.querySelector('input[name="yieldPercent"]').value = selected.yieldPercent || 100;
+            document.querySelector('input[name="wasteType"]').value = selected.wasteType || '';
+            
+            // Cacher les suggestions
+            suggestionsBox.style.display = 'none';
+            
+            // Notification
+            showToast(`✅ ${selected.name} sélectionné - Rendement ${selected.yieldPercent}% pré-rempli !`, 'success');
         };
 
         // Close Modal
         window.closeModal = function(modalId) {
             const modal = document.getElementById(modalId);
             if (modal) {
-                modal.remove();
+                // Vérifier si le modal existe dans le HTML initial (statique)
+                // Si le modal a été créé dynamiquement, il faut le supprimer
+                // Si le modal est statique (présent au chargement), il faut juste le cacher
+                
+                // Modaux statiques : addIngredientModal, categoryManagerModal
+                const staticModals = ['addIngredientModal', 'categoryManagerModal'];
+                
+                if (staticModals.includes(modalId)) {
+                    // Modal statique : cacher
+                    modal.classList.add('hidden');
+                } else {
+                    // Modal dynamique : supprimer
+                    modal.remove();
+                }
             }
         };
         
         // Close modal on Escape key
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
-                const modals = document.querySelectorAll('.modal');
-                modals.forEach(modal => modal.remove());
+                // Cacher les modaux statiques
+                const staticModals = document.querySelectorAll('.modal.hidden');
+                staticModals.forEach(modal => modal.classList.add('hidden'));
+                
+                // Supprimer les modaux dynamiques (ceux sans .hidden initialement)
+                const dynamicModals = document.querySelectorAll('.modal:not([id="addIngredientModal"]):not([id="categoryManagerModal"])');
+                dynamicModals.forEach(modal => {
+                    if (!modal.classList.contains('hidden')) {
+                        modal.remove();
+                    }
+                });
             }
         });
         
         // Close modal on overlay click
         document.addEventListener('click', (e) => {
             if (e.target.classList.contains('modal')) {
-                e.target.remove();
+                const modalId = e.target.id;
+                if (modalId) {
+                    closeModal(modalId);
+                }
             }
         });
 
+        // ========================================
+        // IMPORT / EXPORT INGRÉDIENTS
+        // ========================================
+        
+        /**
+         * Affiche le modal d'import
+         */
+        window.showImportModal = function() {
+            const modal = document.createElement('div');
+            modal.id = 'importModal';
+            modal.className = 'modal';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 700px;">
+                    <div class="modal-header">
+                        <h2>📥 Importer des ingrédients</h2>
+                        <button class="modal-close" onclick="closeModal('importModal')">✕</button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Format Selection -->
+                        <div style="margin-bottom: var(--space-lg);">
+                            <label style="display: block; font-weight: 600; margin-bottom: var(--space-sm);">Format du fichier</label>
+                            <div style="display: flex; gap: var(--space-md);">
+                                <label style="flex: 1; padding: var(--space-md); border: 2px solid var(--light); border-radius: var(--radius-md); cursor: pointer; display: flex; align-items: center; gap: var(--space-sm);">
+                                    <input type="radio" name="importFormat" value="json" checked>
+                                    <div>
+                                        <strong>JSON</strong>
+                                        <div style="font-size: 12px; color: var(--gray);">Fichier .json (recommandé)</div>
+                                    </div>
+                                </label>
+                                <label style="flex: 1; padding: var(--space-md); border: 2px solid var(--light); border-radius: var(--radius-md); cursor: pointer; display: flex; align-items: center; gap: var(--space-sm);">
+                                    <input type="radio" name="importFormat" value="csv">
+                                    <div>
+                                        <strong>CSV</strong>
+                                        <div style="font-size: 12px; color: var(--gray);">Fichier .csv (Excel)</div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- File Upload -->
+                        <div id="dropzone" style="
+                            border: 3px dashed var(--primary);
+                            border-radius: var(--radius-lg);
+                            padding: var(--space-xl);
+                            text-align: center;
+                            background: var(--light);
+                            cursor: pointer;
+                            transition: all 0.3s;
+                        ">
+                            <div style="font-size: 48px; margin-bottom: var(--space-md);">📁</div>
+                            <p style="font-weight: 600; margin-bottom: var(--space-sm);">Glissez votre fichier ici</p>
+                            <p style="color: var(--gray); font-size: 14px; margin-bottom: var(--space-md);">ou cliquez pour sélectionner</p>
+                            <input type="file" id="fileInput" accept=".json,.csv" style="display: none;">
+                            <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+                                📂 Choisir un fichier
+                            </button>
+                        </div>
+                        
+                        <!-- File Info -->
+                        <div id="fileInfo" style="display: none; margin-top: var(--space-md); padding: var(--space-md); background: var(--light); border-radius: var(--radius-md);">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <strong id="fileName"></strong>
+                                    <div style="font-size: 12px; color: var(--gray);" id="fileSize"></div>
+                                </div>
+                                <button class="btn" style="background: var(--danger); color: white;" onclick="clearFile()">
+                                    ✕ Retirer
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Preview -->
+                        <div id="previewSection" style="display: none; margin-top: var(--space-lg);">
+                            <h3 style="margin-bottom: var(--space-md);">📋 Aperçu</h3>
+                            <div id="previewContent" style="background: white; padding: var(--space-md); border-radius: var(--radius-md); max-height: 300px; overflow-y: auto;"></div>
+                        </div>
+                        
+                        <!-- Import Options -->
+                        <div id="importOptions" style="display: none; margin-top: var(--space-lg);">
+                            <h3 style="margin-bottom: var(--space-md);">⚙️ Options d'import</h3>
+                            <label style="display: flex; align-items: center; gap: var(--space-sm); padding: var(--space-md); background: var(--light); border-radius: var(--radius-md);">
+                                <input type="checkbox" id="mergeMode" checked>
+                                <div>
+                                    <strong>Fusion intelligente</strong>
+                                    <div style="font-size: 12px; color: var(--gray);">Évite les doublons (par nom), conserve vos ingrédients existants</div>
+                                </div>
+                            </label>
+                        </div>
+                        
+                        <!-- Actions -->
+                        <div style="display: flex; gap: var(--space-md); margin-top: var(--space-xl);">
+                            <button type="button" class="btn" style="flex: 1; background: var(--gray); color: white;" onclick="closeModal('importModal')">
+                                Annuler
+                            </button>
+                            <button id="importBtn" class="btn btn-primary" style="flex: 1;" disabled onclick="executeImport()">
+                                📥 Importer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Setup drag & drop
+            const dropzone = document.getElementById('dropzone');
+            const fileInput = document.getElementById('fileInput');
+            
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropzone.addEventListener(eventName, preventDefaults, false);
+            });
+            
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropzone.addEventListener(eventName, () => {
+                    dropzone.style.borderColor = 'var(--success)';
+                    dropzone.style.background = '#e6f7ed';
+                }, false);
+            });
+            
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropzone.addEventListener(eventName, () => {
+                    dropzone.style.borderColor = 'var(--primary)';
+                    dropzone.style.background = 'var(--light)';
+                }, false);
+            });
+            
+            dropzone.addEventListener('drop', (e) => {
+                const files = e.dataTransfer.files;
+                handleFile(files[0]);
+            }, false);
+            
+            fileInput.addEventListener('change', (e) => {
+                handleFile(e.target.files[0]);
+            });
+            
+            // Store file for import
+            let selectedFile = null;
+            
+            window.handleFile = function(file) {
+                if (!file) return;
+                
+                selectedFile = file;
+                
+                // Show file info
+                document.getElementById('fileName').textContent = file.name;
+                document.getElementById('fileSize').textContent = (file.size / 1024).toFixed(2) + ' KB';
+                document.getElementById('fileInfo').style.display = 'block';
+                
+                // Read and preview
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const content = e.target.result;
+                        const format = document.querySelector('input[name="importFormat"]:checked').value;
+                        
+                        let data;
+                        if (format === 'json') {
+                            data = JSON.parse(content);
+                        } else {
+                            // Parse CSV
+                            data = parseCSV(content);
+                        }
+                        
+                        showPreview(data);
+                        document.getElementById('importOptions').style.display = 'block';
+                        document.getElementById('importBtn').disabled = false;
+                        
+                        // Store parsed data
+                        window.importData = data;
+                        
+                    } catch (error) {
+                        showToast('❌ Erreur de lecture du fichier : ' + error.message, 'error');
+                    }
+                };
+                reader.readAsText(file);
+            };
+            
+            window.clearFile = function() {
+                selectedFile = null;
+                fileInput.value = '';
+                document.getElementById('fileInfo').style.display = 'none';
+                document.getElementById('previewSection').style.display = 'none';
+                document.getElementById('importOptions').style.display = 'none';
+                document.getElementById('importBtn').disabled = true;
+            };
+            
+            function showPreview(data) {
+                const ingredients = Array.isArray(data) ? data : (data.ingredients || []);
+                const preview = ingredients.slice(0, 5);
+                
+                const html = `
+                    <div style="font-weight: 600; margin-bottom: var(--space-sm);">
+                        ${ingredients.length} ingrédient(s) trouvé(s)
+                    </div>
+                    <div style="font-size: 13px; color: var(--gray);">
+                        Aperçu des 5 premiers :
+                    </div>
+                    <ul style="margin-top: var(--space-sm); list-style: none; padding: 0;">
+                        ${preview.map(ing => `
+                            <li style="padding: 8px; border-bottom: 1px solid var(--light);">
+                                <strong>${ing.name}</strong>
+                                ${ing.category ? `<span style="color: var(--gray);"> • ${ing.category}</span>` : ''}
+                                ${ing.yieldPercent ? `<span style="color: var(--warning);"> • Rendement ${ing.yieldPercent}%</span>` : ''}
+                            </li>
+                        `).join('')}
+                    </ul>
+                `;
+                
+                document.getElementById('previewContent').innerHTML = html;
+                document.getElementById('previewSection').style.display = 'block';
+            }
+            
+            function parseCSV(content) {
+                const lines = content.split('\n').filter(l => l.trim());
+                const headers = lines[0].split(',').map(h => h.trim());
+                
+                return lines.slice(1).map(line => {
+                    const values = line.split(',');
+                    const obj = {};
+                    headers.forEach((header, i) => {
+                        obj[header] = values[i] ? values[i].trim() : '';
+                    });
+                    return obj;
+                });
+            }
+        };
+        
+        /**
+         * Exécute l'import
+         */
+        window.executeImport = async function() {
+            const data = window.importData;
+            if (!data) {
+                showToast('❌ Aucune donnée à importer', 'error');
+                return;
+            }
+            
+            const mergeMode = document.getElementById('mergeMode').checked;
+            const ingredients = Array.isArray(data) ? data : (data.ingredients || []);
+            
+            try {
+                const result = IngredientImporter.importFromJSON(
+                    { ingredients }, 
+                    mergeMode ? appState.data.ingredients : []
+                );
+                
+                if (result.success) {
+                    // Replace or merge ingredients
+                    if (mergeMode) {
+                        appState.data.ingredients = result.ingredients;
+                    } else {
+                        appState.data.ingredients = result.ingredients;
+                    }
+                    
+                    saveData();
+                    renderIngredientsPage();
+                    closeModal('importModal');
+                    
+                    showToast(`✅ ${result.new} nouveau(x) ingrédient(s) importé(s) ! Total : ${result.total}`, 'success');
+                } else {
+                    showToast('❌ Erreur lors de l\'import', 'error');
+                }
+                
+            } catch (error) {
+                console.error('Import error:', error);
+                showToast('❌ Erreur : ' + error.message, 'error');
+            }
+        };
+        
+        /**
+         * Affiche le modal d'export
+         */
+        window.showExportModal = function() {
+            const modal = document.createElement('div');
+            modal.id = 'exportModal';
+            modal.className = 'modal';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 600px;">
+                    <div class="modal-header">
+                        <h2>📤 Exporter les ingrédients</h2>
+                        <button class="modal-close" onclick="closeModal('exportModal')">✕</button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Stats -->
+                        <div style="background: var(--light); padding: var(--space-md); border-radius: var(--radius-md); margin-bottom: var(--space-lg);">
+                            <div style="font-size: 24px; font-weight: 700; color: var(--primary); margin-bottom: var(--space-sm);">
+                                ${appState.data.ingredients.length}
+                            </div>
+                            <div style="color: var(--gray);">ingrédients dans votre base</div>
+                        </div>
+                        
+                        <!-- Format Selection -->
+                        <div style="margin-bottom: var(--space-lg);">
+                            <label style="display: block; font-weight: 600; margin-bottom: var(--space-sm);">Format d'export</label>
+                            <div style="display: flex; gap: var(--space-md);">
+                                <label style="flex: 1; padding: var(--space-md); border: 2px solid var(--light); border-radius: var(--radius-md); cursor: pointer;">
+                                    <input type="radio" name="exportFormat" value="json" checked>
+                                    <div style="margin-top: var(--space-sm);">
+                                        <strong>JSON</strong>
+                                        <div style="font-size: 12px; color: var(--gray);">Format complet (recommandé)</div>
+                                    </div>
+                                </label>
+                                <label style="flex: 1; padding: var(--space-md); border: 2px solid var(--light); border-radius: var(--radius-md); cursor: pointer;">
+                                    <input type="radio" name="exportFormat" value="csv">
+                                    <div style="margin-top: var(--space-sm);">
+                                        <strong>CSV</strong>
+                                        <div style="font-size: 12px; color: var(--gray);">Compatible Excel</div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- JSON Options -->
+                        <div id="jsonOptions" style="margin-bottom: var(--space-lg);">
+                            <label style="display: block; font-weight: 600; margin-bottom: var(--space-sm);">Format JSON</label>
+                            <select id="jsonFormat" style="width: 100%; padding: 12px; border: 2px solid var(--light); border-radius: var(--radius-md);">
+                                <option value="array">Tableau simple (recommandé)</option>
+                                <option value="categories">Groupé par catégories</option>
+                                <option value="full">Complet avec métadonnées</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Actions -->
+                        <div style="display: flex; gap: var(--space-md);">
+                            <button type="button" class="btn" style="flex: 1; background: var(--gray); color: white;" onclick="closeModal('exportModal')">
+                                Annuler
+                            </button>
+                            <button class="btn btn-primary" style="flex: 1;" onclick="executeExport()">
+                                📥 Télécharger
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Show/hide options based on format
+            document.querySelectorAll('input[name="exportFormat"]').forEach(radio => {
+                radio.addEventListener('change', (e) => {
+                    document.getElementById('jsonOptions').style.display = 
+                        e.target.value === 'json' ? 'block' : 'none';
+                });
+            });
+        };
+        
+        /**
+         * Exécute l'export
+         */
+        window.executeExport = function() {
+            const format = document.querySelector('input[name="exportFormat"]:checked').value;
+            const ingredients = appState.data.ingredients;
+            
+            if (ingredients.length === 0) {
+                showToast('❌ Aucun ingrédient à exporter', 'error');
+                return;
+            }
+            
+            try {
+                if (format === 'json') {
+                    const jsonFormat = document.getElementById('jsonFormat').value;
+                    IngredientImporter.downloadJSON(ingredients, 'ingredients_export', jsonFormat);
+                } else {
+                    IngredientImporter.downloadCSV(ingredients, 'ingredients_export');
+                }
+                
+                closeModal('exportModal');
+                showToast(`✅ ${ingredients.length} ingrédients exportés !`, 'success');
+                
+            } catch (error) {
+                console.error('Export error:', error);
+                showToast('❌ Erreur lors de l\'export : ' + error.message, 'error');
+            }
+        };
+
         // Handle Add Ingredient
+        // ========================================
+        // MULTI-DEVISES (v51)
+        // ========================================
+        
+        // Les taux de change sont maintenant dans appState.exchangeRates (configurables)
+        
+        // Met à jour le champ de taux de change selon la devise sélectionnée
+        window.updateExchangeRateField = function() {
+            const currencySelect = document.getElementById('lotCurrency');
+            const rateInput = document.getElementById('lotExchangeRate');
+            const helper = document.getElementById('exchangeRateHelper');
+            
+            if (!currencySelect || !rateInput || !helper) return;
+            
+            const currency = currencySelect.value;
+            
+            if (currency === 'EUR') {
+                // EUR : pas de conversion
+                rateInput.value = '';
+                rateInput.disabled = true;
+                helper.textContent = 'Achat en EUR - Pas de conversion';
+                helper.style.color = 'var(--gray)';
+            } else {
+                // Autre devise : pré-remplir avec taux actuel
+                const rate = appState.exchangeRates[currency] || 1.0;
+                rateInput.value = rate;
+                rateInput.disabled = false;
+                
+                const symbol = currency === 'GBP' ? '£' : '$';
+                helper.innerHTML = `
+                    Taux suggéré : 1 ${symbol} = ${rate} €
+                    <br>
+                    <span style="font-style: italic; font-size: 11px;">Modifiable si votre taux est différent</span>
+                `;
+                helper.style.color = '#f59e0b';
+            }
+        };
+        
+        // ========================================
+        // INGREDIENT MANAGEMENT
+        // ========================================
+        
         async function handleAddIngredient(e) {
             e.preventDefault();
             
@@ -4381,15 +6471,25 @@
                 name: formData.get('name'),
                 category: formData.get('category'),
                 baseUnit: formData.get('baseUnit'),
-                alertBaseQty: Number(formData.get('alertQty')) || 0
+                alertBaseQty: Number(formData.get('alertQty')) || 0,
+                // v51 : Rendements
+                yieldPercent: Number(formData.get('yieldPercent')) || 100,
+                wasteType: formData.get('wasteType') || ''
             };
             
             const receivedBy = formData.get('lotReceivedBy') || '';
             
-            // Validation réceptionnaire obligatoire
-            if (!receivedBy) {
-                showToast('❌ Réceptionnaire obligatoire pour traçabilité HACCP', 'error');
-                return;
+            // v51 : Devise et taux de change
+            const currency = formData.get('lotCurrency') || 'EUR';
+            let exchangeRate = 1.0;
+            
+            if (currency !== 'EUR') {
+                const inputRate = Number(formData.get('lotExchangeRate'));
+                if (inputRate && inputRate > 0) {
+                    exchangeRate = inputRate;
+                } else {
+                    exchangeRate = appState.exchangeRates[currency] || 1.0;
+                }
             }
             
             const lotData = {
@@ -4401,7 +6501,10 @@
                 reception: formData.get('lotReception'),
                 supplier: formData.get('lotSupplier'),
                 lotNumber: formData.get('lotNumber'),
-                receivedBy: receivedBy
+                receivedBy: receivedBy,
+                // v51 : Multi-devises
+                currency: currency,
+                exchangeRate: exchangeRate
             };
             
             try {
@@ -4420,8 +6523,13 @@
                 e.target.reset();
                 renderIngredientsPage();
                 
-                // Show success message
-                showToast('✅ Ingrédient ajouté avec succès !', 'success');
+                // Show success message with rendement info
+                let successMsg = '✅ Ingrédient ajouté avec succès !';
+                if (data.yieldPercent < 100) {
+                    const multiplier = (100 / data.yieldPercent).toFixed(2);
+                    successMsg += ` (Rendement ${data.yieldPercent}% → coût ×${multiplier})`;
+                }
+                showToast(successMsg, 'success');
                 
             } catch (error) {
                 console.error('Error:', error);
@@ -4486,6 +6594,29 @@
                         <button class="modal-close" onclick="closeModal('ingredientDetailsModal')">✕</button>
                     </div>
                     <div class="modal-body">
+                        <!-- Rendement Info -->
+                        ${(() => {
+                            const yieldPercent = Number(ingredient.yieldPercent);
+                            if (yieldPercent && yieldPercent > 0 && yieldPercent < 100) {
+                                return `
+                                    <div style="background: linear-gradient(135deg, #fff9e6 0%, #fff3d6 100%); padding: var(--space-md); border-radius: var(--radius-md); margin-bottom: var(--space-lg); border-left: 4px solid #f59e0b;">
+                                        <div style="display: flex; align-items: center; gap: var(--space-sm);">
+                                            <span style="font-size: 24px;">📊</span>
+                                            <div>
+                                                <strong style="color: #f59e0b;">Rendement : ${yieldPercent}%</strong>
+                                                ${ingredient.wasteType ? `
+                                                    <div style="font-size: 13px; color: var(--gray); margin-top: 4px;">
+                                                        Type de déchet : ${ingredient.wasteType}
+                                                    </div>
+                                                ` : ''}
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                            }
+                            return '';
+                        })()}
+                        
                         <!-- Summary Stats -->
                         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-md); margin-bottom: var(--space-lg);">
                             <div class="stat-card primary">
@@ -4667,10 +6798,30 @@
                                 </div>
                             </div>
                             
+                            <!-- Multi-devises (v51) -->
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Devise d'achat *</label>
+                                    <select name="currency" id="lotCurrencyModal" required onchange="updateExchangeRateFieldModal()">
+                                        <option value="EUR">€ Euro (par défaut)</option>
+                                        <option value="GBP">£ Livre Sterling</option>
+                                        <option value="USD">$ Dollar US</option>
+                                    </select>
+                                    <small style="color: var(--gray);">Devise utilisée pour cet achat</small>
+                                </div>
+                                <div class="form-group">
+                                    <label>Taux de change (vers EUR)</label>
+                                    <input type="number" name="exchangeRate" id="lotExchangeRateModal" placeholder="Auto" min="0" step="0.0001" disabled>
+                                    <small style="color: var(--gray);" id="exchangeRateHelperModal">
+                                        Achat en EUR - Pas de conversion
+                                    </small>
+                                </div>
+                            </div>
+                            
                             <div class="form-group">
                                 <label>Coût unitaire calculé</label>
                                 <div id="calculatedCost" style="padding: 12px; background: var(--light); border-radius: var(--radius-md); font-weight: 600; color: var(--primary);">
-                                    - FCFA/${ingredient.baseUnit}
+                                    - €/${ingredient.baseUnit}
                                 </div>
                             </div>
                             
@@ -4737,7 +6888,7 @@
                 if (qty > 0) {
                     const unitCost = (price + fees) / qty;
                     // Show with 2 decimals for precision
-                    modal.querySelector('#calculatedCost').textContent = unitCost.toFixed(2) + ' FCFA/' + ingredient.baseUnit;
+                    modal.querySelector('#calculatedCost').textContent = unitCost.toFixed(2) + ' €/' + ingredient.baseUnit;
                 }
             }
             
@@ -4745,6 +6896,36 @@
             feesInput.addEventListener('input', updateCost);
             qtyInput.addEventListener('input', updateCost);
             unitSelect.addEventListener('change', updateCost);
+            
+            // Fonction pour mettre à jour le taux de change dans ce modal
+            window.updateExchangeRateFieldModal = function() {
+                const currencySelect = document.getElementById('lotCurrencyModal');
+                const rateInput = document.getElementById('lotExchangeRateModal');
+                const helper = document.getElementById('exchangeRateHelperModal');
+                
+                if (!currencySelect || !rateInput || !helper) return;
+                
+                const currency = currencySelect.value;
+                
+                if (currency === 'EUR') {
+                    rateInput.value = '';
+                    rateInput.disabled = true;
+                    helper.textContent = 'Achat en EUR - Pas de conversion';
+                    helper.style.color = 'var(--gray)';
+                } else {
+                    const rate = appState.exchangeRates[currency] || 1.0;
+                    rateInput.value = rate;
+                    rateInput.disabled = false;
+                    
+                    const symbol = currency === 'GBP' ? '£' : '$';
+                    helper.innerHTML = `
+                        Taux suggéré : 1 ${symbol} = ${rate} €
+                        <br>
+                        <span style="font-style: italic; font-size: 11px;">Modifiable si votre taux est différent</span>
+                    `;
+                    helper.style.color = '#f59e0b';
+                }
+            };
             
             // Handle form submit
             modal.querySelector('#addLotForm').addEventListener('submit', handleAddLot);
@@ -4778,7 +6959,10 @@
                 dlc: formData.get('dlc'),
                 reception: formData.get('reception'),
                 supplier: formData.get('supplier'),
-                lotNumber: formData.get('lotNumber')
+                lotNumber: formData.get('lotNumber'),
+                // v51 : Multi-devises
+                currency: formData.get('currency') || 'EUR',
+                exchangeRate: formData.get('currency') === 'EUR' ? 1.0 : (Number(formData.get('exchangeRate')) || 1.0)
             };
             
             try {
@@ -5124,6 +7308,191 @@
         };
 
         // ========================================
+        // SETTINGS PAGE
+        // ========================================
+        
+        function renderSettingsPage() {
+            const html = `
+                <div class="page-header">
+                    <h1>⚙️ Paramètres</h1>
+                </div>
+                
+                <div style="max-width: 800px; margin: 0 auto;">
+                    <!-- Exchange Rates Section -->
+                    <div style="background: white; padding: var(--space-xl); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); margin-bottom: var(--space-xl);">
+                        <h2 style="margin-bottom: var(--space-md); font-family: var(--font-display);">
+                            💱 Taux de change
+                        </h2>
+                        <p style="color: var(--gray); margin-bottom: var(--space-lg);">
+                            Configurez les taux de change utilisés lors de l'ajout de lots en devises étrangères. 
+                            Ces taux sont utilisés pour convertir automatiquement les prix en EUR.
+                        </p>
+                        
+                        <form id="exchangeRatesForm">
+                            <div class="form-group">
+                                <label>€ Euro (EUR) - Base de référence</label>
+                                <input type="number" value="1.00" disabled style="background: var(--light); cursor: not-allowed;">
+                                <small style="color: var(--gray);">L'Euro est la devise de référence (taux fixe = 1.00)</small>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>£ Livre Sterling (GBP) → EUR</label>
+                                <input type="number" id="rateGBP" name="GBP" value="${appState.exchangeRates.GBP}" min="0" step="0.0001" required>
+                                <small style="color: var(--gray);">
+                                    Exemple : Si 1 £ = 0.85 €, entrez <strong>0.85</strong>
+                                </small>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>$ Dollar US (USD) → EUR</label>
+                                <input type="number" id="rateUSD" name="USD" value="${appState.exchangeRates.USD}" min="0" step="0.0001" required>
+                                <small style="color: var(--gray);">
+                                    Exemple : Si 1 $ = 1.09 €, entrez <strong>1.09</strong>
+                                </small>
+                            </div>
+                            
+                            <div style="background: linear-gradient(135deg, #fff9e6 0%, #fff3d6 100%); padding: var(--space-md); border-radius: var(--radius-md); margin-bottom: var(--space-lg); border-left: 4px solid #f59e0b;">
+                                <div style="display: flex; align-items: flex-start; gap: var(--space-sm);">
+                                    <span style="font-size: 20px;">💡</span>
+                                    <div style="flex: 1;">
+                                        <strong style="color: #f59e0b; display: block; margin-bottom: 4px;">Comment trouver le bon taux ?</strong>
+                                        <p style="margin: 0; font-size: 13px; line-height: 1.5; color: #78350f;">
+                                            Utilisez le <strong>taux réel appliqué par votre banque</strong> lors de vos achats en devises.
+                                            <br>
+                                            Vous pouvez le trouver sur votre relevé bancaire ou demander à votre conseiller.
+                                            <br><br>
+                                            <strong>Astuce :</strong> Ces taux ne changent que légèrement d'un mois à l'autre. 
+                                            Mettez-les à jour 1 fois par mois suffit pour la plupart des restaurants.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary" style="width: 100%;">
+                                💾 Enregistrer les taux de change
+                            </button>
+                        </form>
+                    </div>
+                    
+                    <!-- 💰 COEFFICIENT DÉPENSES FIXES -->
+                    <div style="background: white; padding: var(--space-xl); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); margin-bottom: var(--space-xl);">
+                        <h2 style="margin-bottom: var(--space-md); font-family: var(--font-display);">
+                            💰 Coefficient dépenses fixes
+                        </h2>
+                        <p style="color: var(--gray); margin-bottom: var(--space-lg);">
+                            Ce coefficient permet d'intégrer les <strong>dépenses fixes</strong> (loyer, salaires, électricité, etc.) 
+                            dans le calcul du <strong>coût réel</strong> de vos produits et packs.
+                        </p>
+                        
+                        <form id="overheadForm">
+                            <div class="form-group">
+                                <label>Coefficient multiplicateur</label>
+                                <input type="number" id="overheadCoefficient" value="${appState.data.settings?.overheadCoefficient || 1.40}" min="1" max="5" step="0.01" required>
+                                <small style="color: var(--gray);">
+                                    <strong>Valeur par défaut : 1.40</strong> (40% de dépenses fixes)
+                                    <br>
+                                    Exemple : Coût ingrédients 10€ × 1.40 = <strong>14€ coût réel</strong>
+                                </small>
+                            </div>
+                            
+                            <div style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); padding: var(--space-md); border-radius: var(--radius-md); margin-bottom: var(--space-lg); border-left: 4px solid var(--info);">
+                                <div style="display: flex; align-items: flex-start; gap: var(--space-sm);">
+                                    <span style="font-size: 20px;">📊</span>
+                                    <div style="flex: 1;">
+                                        <strong style="color: var(--info); display: block; margin-bottom: 4px;">Comment calculer votre coefficient ?</strong>
+                                        <p style="margin: 0; font-size: 13px; line-height: 1.5; color: #0c4a6e;">
+                                            <strong>Formule : Coefficient = 1 + (Dépenses fixes mensuelles / Chiffre d'affaires mensuel)</strong>
+                                            <br><br>
+                                            <strong>Exemple :</strong>
+                                            <br>• Dépenses fixes mensuelles : 2 000 €
+                                            <br>• CA mensuel : 5 000 €
+                                            <br>• Coefficient = 1 + (2000 / 5000) = <strong>1.40</strong>
+                                            <br><br>
+                                            💡 <strong>Valeurs typiques :</strong>
+                                            <br>• Restaurant haute gamme : <strong>1.20 - 1.30</strong> (20-30%)
+                                            <br>• Restaurant standard : <strong>1.35 - 1.45</strong> (35-45%)
+                                            <br>• Food truck / Point chaud : <strong>1.50 - 1.70</strong> (50-70%)
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label style="display: flex; align-items: center; gap: var(--space-xs);">
+                                    <input type="checkbox" id="showDirectCost" ${appState.data.settings?.showDirectCost !== false ? 'checked' : ''}>
+                                    <span>Afficher coût direct ET coût total dans les packs</span>
+                                </label>
+                                <small style="color: var(--gray); margin-left: 24px;">
+                                    Affiche : <strong>Coût direct : 10€</strong> puis <strong>Coût total (×1.40) : 14€</strong>
+                                </small>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary" style="width: 100%;">
+                                💾 Enregistrer le coefficient
+                            </button>
+                        </form>
+                    </div>
+                    
+                    <!-- Future sections placeholder -->
+                    <div style="background: var(--light); padding: var(--space-xl); border-radius: var(--radius-lg); text-align: center; color: var(--gray);">
+                        <p>🚀 D'autres paramètres seront ajoutés prochainement</p>
+                        <small>Thèmes, notifications, sauvegardes automatiques, etc.</small>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('mainContent').innerHTML = html;
+            
+            // Handle exchange rates form
+            document.getElementById('exchangeRatesForm').addEventListener('submit', handleSaveExchangeRates);
+            
+            // Handle overhead coefficient form
+            document.getElementById('overheadForm').addEventListener('submit', handleSaveOverheadCoefficient);
+        }
+        
+        function handleSaveExchangeRates(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            
+            // Update rates
+            appState.exchangeRates.GBP = Number(formData.get('GBP'));
+            appState.exchangeRates.USD = Number(formData.get('USD'));
+            
+            // Save
+            saveData();
+            
+            showToast('✅ Taux de change enregistrés !', 'success');
+        }
+        
+        function handleSaveOverheadCoefficient(e) {
+            e.preventDefault();
+            
+            const coefficient = Number(document.getElementById('overheadCoefficient').value);
+            const showDirectCost = document.getElementById('showDirectCost').checked;
+            
+            // Valider coefficient
+            if (coefficient < 1 || coefficient > 5) {
+                showToast('❌ Le coefficient doit être entre 1.00 et 5.00', 'error');
+                return;
+            }
+            
+            // Initialiser settings si n'existe pas
+            if (!appState.data.settings) {
+                appState.data.settings = {};
+            }
+            
+            // Update settings
+            appState.data.settings.overheadCoefficient = coefficient;
+            appState.data.settings.showDirectCost = showDirectCost;
+            
+            // Save
+            saveData();
+            
+            showToast(`✅ Coefficient ${coefficient.toFixed(2)} enregistré !`, 'success');
+        }
+        
+        // ========================================
         // NAVIGATION
         // ========================================
         
@@ -5161,6 +7530,12 @@
                     break;
                 case 'packs':
                     renderPacksPage();
+                    break;
+                case 'profitability':
+                    renderProfitabilityPage();
+                    break;
+                case 'settings':
+                    renderSettingsPage();
                     break;
                 default:
                     document.getElementById('mainContent').innerHTML = `<h1>${pageName} - En développement...</h1>`;
@@ -5210,24 +7585,18 @@
         // Initialize app
         // Load W.E Salon de Thé demo data
         window.loadDemoWE = function() {
-            if (confirm('⚠️ Charger la démo "W.E Salon de Thé" ?\n\nCeci va remplacer toutes vos données actuelles par un scénario de salon de thé complet avec :\n- 18 ingrédients\n- 9 recettes (gaufres, jus, gâteaux)\n- 2 productions\n- 2 vendeurs\n\nContinuer ?')) {
+            if (confirm('⚠️ Charger la démo "Le Salon Moderne" ?\n\nCeci va remplacer toutes vos données par :\n- 21 ingrédients avec VRAIS PRIX EUR du marché\n- 7 recettes COHÉRENTES (gaufres 1kg, nectars, cocktails)\n- Rendements RÉALISTES appliqués\n- Coûts calculés avec pertes\n\nContinuer ?')) {
                 try {
-                    // Convert ingredients
-                    const convertedIngredients = demoWESalon.ingredients.map(ing => {
-                        return Ingredient.fromJSON(ing);
-                    });
+                    // Vider localStorage
+                    console.log('🧹 Nettoyage localStorage...');
+                    localStorage.clear();
                     
-                    // Convert recipes
-                    const convertedRecipes = demoWESalon.recipes.map(rec => {
-                        return Recipe.fromJSON(rec);
-                    });
+                    // Convertir les données
+                    const convertedIngredients = demoWESalon.ingredients.map(ing => Ingredient.fromJSON(ing));
+                    const convertedRecipes = demoWESalon.recipes.map(rec => Recipe.fromJSON(rec));
+                    const convertedProductions = demoWESalon.productions.map(prod => Production.fromJSON(prod));
                     
-                    // Convert productions
-                    const convertedProductions = demoWESalon.productions.map(prod => {
-                        return Production.fromJSON(prod);
-                    });
-                    
-                    // Update appState
+                    // Mettre à jour appState
                     appState.data = {
                         ingredients: convertedIngredients,
                         recipes: convertedRecipes,
@@ -5239,11 +7608,11 @@
                         staff: demoWESalon.staff || []
                     };
                     
-                    // Save
+                    // Sauvegarder
                     saveData();
                     
-                    // Refresh page
-                    showToast('✅ Démo "W.E Salon de Thé" chargée avec succès !', 'success');
+                    // Recharger
+                    showToast('✅ Démo "Le Salon Moderne" chargée avec succès !', 'success');
                     setTimeout(() => location.reload(), 1000);
                     
                 } catch (error) {
@@ -5255,6 +7624,12 @@
 
         function initApp() {
             loadData();
+            
+            // Charger les taux de change personnalisés
+            loadExchangeRates();
+            
+            // Initialiser automatiquement la base de 100 ingrédients si nécessaire
+            initializeIngredientDatabase();
             
             // Load saved currency preference
             const savedCurrency = localStorage.getItem('selectedCurrency');
@@ -5303,10 +7678,9 @@
                     
                     // Show toast
                     const currencyName = {
-                        'XAF': 'FCFA',
                         'EUR': 'Euro (€)',
-                        'USD': 'Dollar ($)',
-                        'GBP': 'Livre (£)'
+                        'GBP': 'Livre Sterling (£)',
+                        'USD': 'Dollar ($)'
                     };
                     showToast(`💱 Devise changée : ${currencyName[newCurrency]}`, 'info');
                 });
