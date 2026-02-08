@@ -65,19 +65,37 @@ export class Pack {
    * Calcule le coût total du pack (somme des coûts recettes)
    * @param {Recipe[]} recipes - Recettes
    * @param {Ingredient[]} ingredients - Ingrédients pour calcul coût
-   * @returns {number}
+   * @param {Object} [settings] - Paramètres (overheadCoefficient)
+   * @returns {number|Object} - Coût total ou {direct, total} si showDirectCost
    */
-  getCost(recipes, ingredients) {
+  getCost(recipes, ingredients, settings = null) {
     let totalCost = 0;
+    let totalDirectCost = 0;
     
     for (const item of this.items) {
       // Trouver la recette
       const recipe = recipes.find(r => r.id === item.productionId);
       
       if (recipe && recipe.getCostPerUnit) {
-        const costPerUnit = recipe.getCostPerUnit(ingredients);
-        totalCost += costPerUnit * item.quantity;
+        const cost = recipe.getCostPerUnit(ingredients, settings);
+        
+        // Si settings.showDirectCost, cost est un objet
+        if (cost && typeof cost === 'object' && cost.total !== undefined) {
+          totalDirectCost += cost.direct * item.quantity;
+          totalCost += cost.total * item.quantity;
+        } else {
+          totalCost += cost * item.quantity;
+        }
       }
+    }
+    
+    // Retourner détails si demandé
+    if (settings?.showDirectCost && totalDirectCost > 0) {
+      return {
+        direct: totalDirectCost,
+        total: totalCost,
+        coefficient: settings.overheadCoefficient || 1.0
+      };
     }
     
     return totalCost;
@@ -96,22 +114,83 @@ export class Pack {
   /**
    * Vérifie si le stock est suffisant pour le pack
    * @param {Production[]} productions
+   * @param {number} [quantity=1] - Nombre de packs à vérifier
    * @returns {boolean}
    */
-  hasStock(productions) {
+  hasStock(productions, quantity = 1) {
     for (const item of this.items) {
+      // ✅ BUG FIX: Utiliser p.recipeId (pas p.productionId)
       const availableProds = productions.filter(p => 
         p.recipeId === item.productionId && p.remainingQty > 0
       );
       
       const totalAvailable = availableProds.reduce((sum, p) => sum + p.remainingQty, 0);
+      const required = item.quantity * quantity;
       
-      if (totalAvailable < item.quantity) {
+      if (totalAvailable < required) {
         return false;
       }
     }
     
     return true;
+  }
+  
+  /**
+   * Obtient le détail de disponibilité du stock
+   * @param {Production[]} productions
+   * @param {number} [quantity=1] - Nombre de packs
+   * @returns {Object} - {available: boolean, details: [...]}
+   */
+  getStockDetails(productions, quantity = 1) {
+    const details = this.items.map(item => {
+      const availableProds = productions.filter(p => 
+        p.recipeId === item.productionId && p.remainingQty > 0
+      );
+      
+      const totalAvailable = availableProds.reduce((sum, p) => sum + p.remainingQty, 0);
+      const required = item.quantity * quantity;
+      
+      return {
+        productionId: item.productionId,
+        productionName: item.productionName,
+        required,
+        available: totalAvailable,
+        unit: item.unit,
+        sufficient: totalAvailable >= required,
+        productions: availableProds.map(p => ({
+          id: p.id,
+          qty: p.remainingQty,
+          date: p.productionDate
+        }))
+      };
+    });
+    
+    return {
+      available: details.every(d => d.sufficient),
+      details
+    };
+  }
+  
+  /**
+   * Calcule le prix suggéré basé sur le coût + marge
+   * @param {Recipe[]} recipes
+   * @param {Ingredient[]} ingredients
+   * @param {number} [marginPercent=30] - Marge en %
+   * @param {Object} [settings] - Paramètres (overheadCoefficient)
+   * @returns {number}
+   */
+  getSuggestedPrice(recipes, ingredients, marginPercent = 30, settings = null) {
+    const costResult = this.getCost(recipes, ingredients, settings);
+    
+    // Si c'est un objet (showDirectCost), prendre le coût total
+    const cost = typeof costResult === 'object' ? costResult.total : costResult;
+    
+    if (cost === 0) return 0;
+    
+    // Prix = Coût / (1 - Marge%)
+    const price = cost / (1 - marginPercent / 100);
+    
+    return Math.round(price * 100) / 100;
   }
 
   toJSON() {

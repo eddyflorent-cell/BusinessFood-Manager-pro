@@ -58,10 +58,15 @@ export class Ingredient {
 
   /**
    * Prix total (somme des coûts de tous les lots restants)
+   * Calcul en EUR base pour multi-devises (v51)
    * @returns {number}
    */
   getPriceTotal() {
-    return this.lots.reduce((sum, lot) => sum + lot.getValeurActuelle(), 0);
+    return this.lots.reduce((sum, lot) => {
+      // v51 : Utilise la valeur en EUR (conversion automatique)
+      const valeurEUR = lot.getValeurActuelleEUR ? lot.getValeurActuelleEUR() : lot.getValeurActuelle();
+      return sum + valeurEUR;
+    }, 0);
   }
 
   /**
@@ -219,6 +224,8 @@ export class Ingredient {
       baseUnit: json.baseUnit,
       displayUnit: json.displayUnit,
       alertBaseQty: json.alertBaseQty || 0,
+      yieldPercent: json.yieldPercent || 100,
+      wasteType: json.wasteType || '',
       lots: json.lots || [],
       createdAt: json.createdAt,
       updatedAt: json.updatedAt

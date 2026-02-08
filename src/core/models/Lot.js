@@ -55,11 +55,37 @@ export class Lot {
   }
 
   /**
+   * Coût unitaire en EUR (avec conversion multi-devises)
+   * Rétrocompatible avec anciens lots (v51.3)
+   * @returns {number}
+   */
+  getCoutUnitaireEUR() {
+    if (this.quantiteInitiale === 0) return 0;
+    
+    // Rétrocompatibilité : Si pas de méthode getCoutTotalEUR, calcul manuel
+    if (typeof this.getCoutTotalEUR !== 'function') {
+      const tauxEUR = this.tauxEUR || 1.0;
+      const coutTotalEUR = (this.prixTotal + (this.fraisApproche || 0)) * tauxEUR;
+      return coutTotalEUR / this.quantiteInitiale;
+    }
+    
+    return this.getCoutTotalEUR() / this.quantiteInitiale;
+  }
+
+  /**
    * Valeur actuelle du lot (coût unitaire × quantité restante)
    * @returns {number}
    */
   getValeurActuelle() {
     return this.getCoutUnitaire() * this.quantite;
+  }
+
+  /**
+   * Valeur actuelle en EUR (avec conversion multi-devises) - v51
+   * @returns {number}
+   */
+  getValeurActuelleEUR() {
+    return this.getCoutUnitaireEUR() * this.quantite;
   }
 
   /**

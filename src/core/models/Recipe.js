@@ -148,11 +148,12 @@ export class Recipe {
 
   /**
    * Calcule le coût par unité de la recette basé sur les ingrédients
-   * Formule PRO : (Prix / Rendement) × Quantité × (1 + Assaisonnement%)
+   * Formule PRO : (Prix / Rendement) × Quantité × (1 + Assaisonnement%) × Coefficient overhead
    * @param {Ingredient[]} ingredients - Liste des ingrédients avec stock/prix
-   * @returns {number}
+   * @param {Object} [settings] - Paramètres (overheadCoefficient, showDirectCost)
+   * @returns {number|Object} - Coût par unité ou {direct, total} si showDirectCost
    */
-  getCostPerUnit(ingredients) {
+  getCostPerUnit(ingredients, settings = null) {
     let totalCost = 0;
     
     for (const recipeIng of this.ingredients) {
@@ -179,9 +180,24 @@ export class Recipe {
     // Ajouter forfait assaisonnements (sel, poivre, huile, etc.)
     // Ex: 3% du coût total
     const seasoningMultiplier = 1 + (this.seasoningPercent / 100);
-    const totalCostWithSeasoning = totalCost * seasoningMultiplier;
+    const directCost = totalCost * seasoningMultiplier;
     
-    return this.producedQty > 0 ? totalCostWithSeasoning / this.producedQty : 0;
+    // 💰 APPLIQUER COEFFICIENT OVERHEAD (dépenses fixes)
+    const coefficient = settings?.overheadCoefficient || 1.0;
+    const totalCostWithOverhead = directCost * coefficient;
+    
+    const costPerUnit = this.producedQty > 0 ? totalCostWithOverhead / this.producedQty : 0;
+    
+    // Si demandé, retourner détails
+    if (settings?.showDirectCost) {
+      return {
+        direct: this.producedQty > 0 ? directCost / this.producedQty : 0,
+        total: costPerUnit,
+        coefficient: coefficient
+      };
+    }
+    
+    return costPerUnit;
   }
 
   static fromJSON(json) {
