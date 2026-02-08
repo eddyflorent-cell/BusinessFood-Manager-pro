@@ -111,24 +111,52 @@ export class RecipeService {
    */
   static calculateCapacity(recipe, ingredients) {
     if (!recipe.isValid()) {
-      return { batches: 0, units: 0, limitingIngredient: null };
+      return { batches: 0, units: 0, limitingIngredient: null, missingIngredients: [] };
     }
     
     let minBatches = Infinity;
     let limitingIngredient = null;
+    const missingIngredients = [];
     
     for (const recipeIng of recipe.ingredients) {
       // Trouver l'ingrédient dans le stock
       const ingredient = ingredients.find(i => i.id === recipeIng.ingredientId);
       
       if (!ingredient) {
-        return { batches: 0, units: 0, limitingIngredient: recipeIng.ingredientName };
+        missingIngredients.push({
+          name: recipeIng.ingredientName || 'Inconnu',
+          missing: recipeIng.quantity,
+          unit: recipeIng.unit
+        });
+        return { batches: 0, units: 0, limitingIngredient: recipeIng.ingredientName, missingIngredients };
       }
       
       const available = ingredient.getBaseQtyRemaining();
       const required = recipeIng.baseQty;
       
       if (required === 0) continue;
+      
+      // Vérifier si stock insuffisant
+      if (available < required) {
+        const missingInBaseUnit = required - available;
+        // Convertir en unité d'affichage
+        let missingDisplay = missingInBaseUnit;
+        let displayUnit = ingredient.baseUnit;
+        
+        if (ingredient.baseUnit === 'g' && missingInBaseUnit >= 1000) {
+          missingDisplay = missingInBaseUnit / 1000;
+          displayUnit = 'kg';
+        } else if (ingredient.baseUnit === 'ml' && missingInBaseUnit >= 1000) {
+          missingDisplay = missingInBaseUnit / 1000;
+          displayUnit = 'L';
+        }
+        
+        missingIngredients.push({
+          name: ingredient.name,
+          missing: missingDisplay,
+          unit: displayUnit
+        });
+      }
       
       // Nombre de batches possibles avec cet ingrédient
       const batchesForThisIngredient = Math.floor(available / required);
@@ -149,7 +177,66 @@ export class RecipeService {
     return {
       batches: minBatches,
       units,
-      limitingIngredient
+      limitingIngredient,
+      missingIngredients: missingIngredients
+    };
+  }
+  
+  /**
+   * Calcule le coût total d'une recette
+   * @param {Recipe} recipe - Recette
+   * @param {Ingredient[]} ingredients - Liste des ingrédients disponibles
+   * @returns {Object} - {totalCost, costPerUnit, ingredients: [{name, cost, quantity, unit}]}
+   */
+  static calculateCost(recipe, ingredients) {
+    if (!recipe || !recipe.ingredients || recipe.ingredients.length === 0) {
+      return {
+        totalCost: 0,
+        costPerUnit: 0,
+        ingredients: []
+      };
+    }
+    
+    let totalCost = 0;
+    const ingredientCosts = [];
+    
+    for (const recipeIng of recipe.ingredients) {
+      const ingredient = ingredients.find(i => i.id === recipeIng.ingredientId);
+      
+      if (!ingredient) {
+        ingredientCosts.push({
+          name: recipeIng.ingredientName || 'Inconnu',
+          cost: 0,
+          quantity: recipeIng.quantity,
+          unit: recipeIng.unit
+        });
+        continue;
+      }
+      
+      // Obtenir le prix par unité de base
+      const pricePerBaseUnit = ingredient.getPricePerBaseUnit ? ingredient.getPricePerBaseUnit() : 0;
+      
+      // Calculer le coût pour cet ingrédient (en utilisant baseQty qui est déjà convertie)
+      const cost = pricePerBaseUnit * recipeIng.baseQty;
+      
+      totalCost += cost;
+      
+      ingredientCosts.push({
+        name: ingredient.name,
+        cost: cost,
+        quantity: recipeIng.quantity,
+        unit: recipeIng.unit,
+        pricePerBaseUnit: pricePerBaseUnit
+      });
+    }
+    
+    const producedQty = recipe.producedQty || 1;
+    const costPerUnit = totalCost / producedQty;
+    
+    return {
+      totalCost: totalCost,
+      costPerUnit: costPerUnit,
+      ingredients: ingredientCosts
     };
   }
   

@@ -50,8 +50,9 @@ export class IngredientService {
       throw new ValidationError('Données invalides', errors);
     }
     
-    // Normalisation des unités
-    const { baseUnit } = unitToBase(1, data.unit);
+    // Normalisation des unités - Accepte 'unit' OU 'baseUnit'
+    const unitToUse = data.baseUnit || data.unit;
+    const { baseUnit } = unitToBase(1, unitToUse);
     
     // Création de l'ingrédient
     return new Ingredient({
@@ -59,8 +60,11 @@ export class IngredientService {
       name: data.name.trim(),
       category: data.category || '',
       baseUnit,
-      displayUnit: data.unit,
+      displayUnit: unitToUse,
       alertBaseQty: data.alertBaseQty || 0,
+      // v51 : Rendements
+      yieldPercent: data.yieldPercent || 100,
+      wasteType: data.wasteType || '',
       lots: [],
       createdAt: new Date(),
       updatedAt: new Date()
@@ -83,7 +87,8 @@ export class IngredientService {
       errors.push('Le nom ne peut pas dépasser 100 caractères');
     }
     
-    if (!data.unit) {
+    // Accepte 'unit' OU 'baseUnit' (v51 fix)
+    if (!data.unit && !data.baseUnit) {
       errors.push('L\'unité est obligatoire');
     }
     
