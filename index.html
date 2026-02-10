@@ -1263,7 +1263,7 @@
                         quantite: 6800,
                         prixTotal: 6000,
                         fraisApproche: 500,
-                        dlc: new Date('2026-01-25').toISOString(),
+                        dlc: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString(),
                         dateReception: new Date('2026-01-18').toISOString(),
                         fournisseur: 'Laiterie Centrale',
                         numeroLot: 'LC-LAIT-2026-20',
@@ -1312,7 +1312,7 @@
                         quantite: 320,
                         prixTotal: 2500,
                         fraisApproche: 0,
-                        dlc: new Date('2026-02-02').toISOString(),
+                        dlc: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
                         dateReception: new Date('2026-01-18').toISOString(),
                         fournisseur: 'Lesaffre Cameroun',
                         numeroLot: 'LES-LF-2026-08',
@@ -1323,12 +1323,27 @@
                 }
             ],
             
-            recipes: [],
-            productions: [],
-            sales: [],
-            expenses: [],
-            vendors: [],
-            staff: []
+            
+                recipes: [],
+                productions: [],
+                sales: [],
+                expenses: [
+                    { id: 'exp_demo_1', label: 'Loyer atelier janvier', category: 'Loyer', date: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0], amount: 850, currency: 'EUR', notes: 'Loyer mensuel atelier de production', createdAt: new Date().toISOString() },
+                    { id: 'exp_demo_2', label: 'Électricité + gaz', category: 'Énergie', date: new Date(new Date().getFullYear(), new Date().getMonth(), 5).toISOString().split('T')[0], amount: 210, currency: 'EUR', notes: 'Facture fournisseur énergie', createdAt: new Date().toISOString() }
+                ],
+                suppliers: [
+                    { id: 'sup_demo_1', name: 'Minoterie du Cameroun', category: 'Grossiste', contact: 'Jean Dupont', phone: '+237 699 000 001', email: 'contact@minoterie-cm.com', address: 'Zone industrielle, Douala', notes: 'Fournisseur principal farines. Livraison le mardi.', createdAt: new Date().toISOString() },
+                    { id: 'sup_demo_2', name: 'Laiterie Centrale', category: 'Producteur', contact: 'Marie Fouda', phone: '+237 699 000 002', email: 'marie@laiterie-centrale.cm', address: 'Route de Bafoussam, Yaoundé', notes: 'Beurre, lait, œufs. Livraison fraîcheur J+1.', createdAt: new Date().toISOString() }
+                ],
+                clients: [
+                    { id: 'cli_demo_1', name: 'Restaurant Le Palais', phone: '+237 699 111 111', email: 'contact@lepalais.cm', tags: ['VIP', 'Professionnel'], notes: 'Commande hebdomadaire. Paiement 30j.', createdAt: new Date().toISOString() },
+                    { id: 'cli_demo_2', name: 'Hôtel Azur', phone: '+237 699 222 222', email: 'achat@hotel-azur.cm', tags: ['Professionnel', 'Récurrent'], notes: 'Petit-déjeuner buffet. Livraison 6h.', createdAt: new Date().toISOString() }
+                ],
+                lossHistory: [
+                    { id: 'loss_demo_1', timestamp: new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate() - 2).toISOString(), ingredientId: 'ing_5', ingredientName: 'Lait entier liquide', quantity: 2000, unit: 'ml', reason: 'chaine_froid', notes: 'Coupure électricité 4h - réfrigérateur hors service', value: 1200 }
+                ],
+                vendors: [],
+                staff: []
         };
         
         // ========================================
@@ -1343,8 +1358,6 @@
             
             try {
                 console.log('🎭 Loading demo data...');
-                console.log('window.Ingredient exists?', !!window.Ingredient);
-                console.log('window.Ingredient.fromJSON exists?', !!(window.Ingredient && window.Ingredient.fromJSON));
                 
                 // Load demo data and convert to proper class instances
                 appState.data.categories = demoData.categories;
@@ -1354,11 +1367,8 @@
                     try {
                         const Ingredient = window.Ingredient;
                         if (Ingredient && Ingredient.fromJSON) {
-                            const ingredient = Ingredient.fromJSON(ingData);
-                            console.log(`✅ Ingredient ${index} converted:`, ingredient.name, 'has getPriceTotal?', typeof ingredient.getPriceTotal);
-                            return ingredient;
+                            return Ingredient.fromJSON(ingData);
                         } else {
-                            console.error('❌ Ingredient class not available!');
                             return ingData;
                         }
                     } catch (err) {
@@ -1367,13 +1377,13 @@
                     }
                 });
                 
-                console.log('✅ Ingredients converted:', appState.data.ingredients.length);
-                console.log('First ingredient:', appState.data.ingredients[0]);
-                
                 appState.data.recipes = demoData.recipes || [];
                 appState.data.productions = demoData.productions || [];
                 appState.data.sales = demoData.sales || [];
                 appState.data.expenses = demoData.expenses || [];
+                appState.data.suppliers = demoData.suppliers || [];
+                appState.data.clients = demoData.clients || [];
+                appState.data.lossHistory = demoData.lossHistory || [];
                 appState.data.vendors = demoData.vendors || [];
                 appState.data.staff = demoData.staff || [];
                 
@@ -1383,7 +1393,7 @@
                 // Refresh current page
                 showPage(appState.currentPage);
                 
-                showToast('🎭 Mode Démo activé ! ' + demoData.ingredients.length + ' ingrédients chargés', 'success');
+                showToast('🎭 Mode Démo activé ! ' + demoData.ingredients.length + ' ingrédients + fournisseurs + clients + pertes chargés', 'success');
                 
             } catch (error) {
                 console.error('Erreur chargement démo:', error);
@@ -1493,6 +1503,10 @@
                 expenses: [],
                 packs: [],
                 staff: [],
+                suppliers: [],
+                clients: [],
+                lossHistory: [],
+                movements: [],
                 categories: [
                     // Catégories par défaut
                     { id: 'cat1', name: 'Farines', parent: null },
@@ -1599,6 +1613,11 @@
                 }
                 
                 appState.data = saved;
+                // Ensure new fields exist (migration for older saves)
+                if (!appState.data.suppliers) appState.data.suppliers = [];
+                if (!appState.data.clients) appState.data.clients = [];
+                if (!appState.data.lossHistory) appState.data.lossHistory = [];
+                if (!appState.data.movements) appState.data.movements = [];
             }
         }
         
@@ -1766,13 +1785,73 @@
         // Render Dashboard
         function renderDashboard() {
             const stats = DashboardService.getDashboardStats(appState.data);
-
+            
+            // --- HACCP KPIs ---
+            const now = new Date();
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+            
+            // Pertes du mois (stockées dans appState.data.lossHistory)
+            const lossHistory = appState.data.lossHistory || [];
+            const monthLosses = lossHistory.filter(l => new Date(l.timestamp) >= startOfMonth);
+            const monthLossValue = monthLosses.reduce((s, l) => s + (l.value || 0), 0);
+            const monthRevenue = stats.sales.revenue || 0;
+            const lossPercent = monthRevenue > 0 ? ((monthLossValue / monthRevenue) * 100).toFixed(1) : '0.0';
+            
+            // Valeur stock instantané
+            const stockValue = stats.stock.total;
+            
+            // Lots DLC urgents (J-2 / J-1)
+            const ingredients = appState.data.ingredients || [];
+            const urgentLots = [];
+            ingredients.forEach(ing => {
+                if (!ing.lots) return;
+                ing.lots.forEach(lot => {
+                    if (lot.epuise || !lot.dlc) return;
+                    const dlcDate = new Date(lot.dlc);
+                    const daysLeft = Math.ceil((dlcDate - now) / (1000 * 60 * 60 * 24));
+                    if (daysLeft <= 2 && lot.quantite > 0) {
+                        urgentLots.push({ ing: ing.name, lot: lot.numeroLot || lot.id, daysLeft, qty: lot.quantite, unit: ing.baseUnit });
+                    }
+                });
+            });
+            
             const html = `
                 <div class="page-header">
                     <h1 class="page-title" data-i18n="welcome">${t('welcome')}</h1>
                     <p class="page-subtitle" data-i18n="today_overview">${t('today_overview')}</p>
                 </div>
 
+                <!-- ═══ HACCP TILES ═══ -->
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:var(--space-md);margin-bottom:var(--space-xl);">
+                    <!-- Pertes alimentaires -->
+                    <div style="background:linear-gradient(135deg,#fc5c65,#ff6b35);border-radius:var(--radius-lg);padding:var(--space-lg);color:white;position:relative;overflow:hidden;box-shadow:0 8px 24px rgba(252,92,101,0.35);">
+                        <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;opacity:0.85;margin-bottom:8px;">🗑 Pertes alimentaires (mois)</div>
+                        <div style="font-size:34px;font-weight:800;margin-bottom:4px;">${formatCurrency(monthLossValue)}</div>
+                        <div style="font-size:14px;opacity:0.9;">${lossPercent}% du CA mensuel</div>
+                        <div style="font-size:12px;opacity:0.75;margin-top:4px;">${monthLosses.length} perte${monthLosses.length !== 1 ? 's' : ''} enregistrée${monthLosses.length !== 1 ? 's' : ''}</div>
+                        <div style="position:absolute;right:16px;bottom:16px;font-size:48px;opacity:0.15;">🗑</div>
+                    </div>
+                    
+                    <!-- Valeur stock T -->
+                    <div style="background:linear-gradient(135deg,#26de81,#4ecdc4);border-radius:var(--radius-lg);padding:var(--space-lg);color:white;position:relative;overflow:hidden;box-shadow:0 8px 24px rgba(38,222,129,0.35);">
+                        <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;opacity:0.85;margin-bottom:8px;">📦 Valeur stock instant T</div>
+                        <div style="font-size:34px;font-weight:800;margin-bottom:4px;">${formatCurrency(stockValue)}</div>
+                        <div style="font-size:14px;opacity:0.9;">Ingrédients + produits finis</div>
+                        <div style="font-size:12px;opacity:0.75;margin-top:4px;">${ingredients.length} ingrédient${ingredients.length !== 1 ? 's' : ''} en stock</div>
+                        <div style="position:absolute;right:16px;bottom:16px;font-size:48px;opacity:0.15;">📦</div>
+                    </div>
+                    
+                    <!-- Lots DLC urgents -->
+                    <div onclick="showPage('ingredients')" style="cursor:pointer;background:${urgentLots.length > 0 ? 'linear-gradient(135deg,#ffa502,#ffe66d)' : 'linear-gradient(135deg,#45aaf2,#4ecdc4)'};border-radius:var(--radius-lg);padding:var(--space-lg);color:white;position:relative;overflow:hidden;box-shadow:0 8px 24px rgba(255,165,2,${urgentLots.length > 0 ? '0.35' : '0.15'});transition:transform 0.2s;">
+                        <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;opacity:0.85;margin-bottom:8px;">⚠️ Lots DLC urgents (J-2/J-1)</div>
+                        <div style="font-size:34px;font-weight:800;margin-bottom:4px;">${urgentLots.length}</div>
+                        <div style="font-size:14px;opacity:0.9;">${urgentLots.length > 0 ? 'Lots à traiter en priorité' : 'Aucun lot critique'}</div>
+                        ${urgentLots.length > 0 ? `<div style="font-size:12px;opacity:0.9;margin-top:4px;">${urgentLots.slice(0,2).map(l => `${l.ing} (J${l.daysLeft <= 0 ? ' expiré' : '-' + l.daysLeft})`).join(', ')}${urgentLots.length > 2 ? '...' : ''}</div>` : ''}
+                        <div style="position:absolute;right:16px;bottom:16px;font-size:48px;opacity:0.15;">⚠️</div>
+                    </div>
+                </div>
+
+                <!-- ═══ STATS CLASSIQUES ═══ -->
                 <div class="stats-grid">
                     <div class="stat-card success">
                         <div class="stat-header">
@@ -1782,19 +1861,19 @@
                         <div class="stat-value">${formatCurrency(stats.sales.margin)}</div>
                         <div class="stat-change positive">
                             <span>↗</span>
-                            <span>+8.2%</span>
+                            <span>Marge brute cumul</span>
                         </div>
                     </div>
 
-                    <div class="stat-card warning">
+                    <div class="stat-card primary">
                         <div class="stat-header">
-                            <span class="stat-label" data-i18n="stock_value">${t('stock_value')}</span>
-                            <span class="stat-icon">📦</span>
+                            <span class="stat-label">CA Total</span>
+                            <span class="stat-icon">💰</span>
                         </div>
-                        <div class="stat-value">${formatCurrency(stats.stock.total)}</div>
-                        <div class="stat-change negative">
-                            <span>↘</span>
-                            <span>-3.1%</span>
+                        <div class="stat-value">${formatCurrency(stats.sales.revenue)}</div>
+                        <div class="stat-change positive">
+                            <span>🛒</span>
+                            <span>${stats.sales.count} vente${stats.sales.count !== 1 ? 's' : ''}</span>
                         </div>
                     </div>
 
@@ -1805,7 +1884,7 @@
                         </div>
                         <div class="stat-value">${stats.alerts.length}</div>
                         <div class="stat-change">
-                            <span>Requires attention</span>
+                            <span>Nécessitent attention</span>
                         </div>
                     </div>
                 </div>
@@ -2262,18 +2341,21 @@
                             </div>
                         ` : ''}
                         
-                        <div class="ingredient-actions">
-                            <button class="action-btn" onclick="showIngredientDetails('${ing.id}')" title="Détails">
-                                👁️
+                        <div class="ingredient-actions" style="display:flex;gap:6px;flex-wrap:wrap;">
+                            <button class="action-btn" style="flex:1;min-width:60px;font-size:13px;padding:8px 4px;" onclick="showIngredientDetails('${ing.id}')" title="Voir lots + mouvements">
+                                📊 Détails
                             </button>
-                            <button class="action-btn" onclick="showAddLotModal('${ing.id}')" title="Ajouter lot">
-                                ➕
+                            <button class="action-btn" style="flex:1;min-width:60px;font-size:13px;padding:8px 4px;" onclick="showAddLotModal('${ing.id}')" title="Réception lot">
+                                ➕ Réception
                             </button>
-                            <button class="action-btn" onclick="showRecordLossModal('${ing.id}')" title="Enregistrer perte">
-                                ❌
+                            <button class="action-btn" style="flex:1;min-width:60px;font-size:13px;padding:8px 4px;border-color:var(--danger);color:var(--danger);" onclick="showRecordLossModal('${ing.id}')" title="Déclarer une perte">
+                                🗑 Perte
                             </button>
-                            <button class="action-btn" onclick="showInventoryModal('${ing.id}')" title="Inventaire">
-                                📊
+                            <button class="action-btn" style="flex:1;min-width:60px;font-size:13px;padding:8px 4px;" onclick="showInventoryModal('${ing.id}')" title="Inventaire physique">
+                                📋 Inventaire
+                            </button>
+                            <button class="action-btn" style="flex:1;min-width:60px;font-size:13px;padding:8px 4px;" onclick="showEditIngredientModal('${ing.id}')" title="Modifier la fiche">
+                                ✎ Fiche
                             </button>
                         </div>
                     </div>
@@ -6766,20 +6848,26 @@
                                     <tbody>
                                         ${availableLots.map(lot => {
                                             const dlcDate = new Date(lot.dlc);
-                                            const daysUntil = lot.daysUntilExpiry ? lot.daysUntilExpiry() : 999;
-                                            const dlcColor = daysUntil < 7 ? 'var(--danger)' : daysUntil < 30 ? 'var(--warning)' : 'var(--success)';
+                                            const now = new Date();
+                                            const daysLeft = Math.ceil((dlcDate - now) / (1000 * 60 * 60 * 24));
+                                            const dlcColor = daysLeft <= 0 ? '#dc2626' : daysLeft <= 2 ? '#dc2626' : daysLeft <= 7 ? 'var(--warning)' : 'var(--success)';
+                                            let dlcBadge = '';
+                                            if (daysLeft <= 0) dlcBadge = `<span style="background:#dc2626;color:white;font-size:11px;font-weight:700;padding:2px 6px;border-radius:4px;margin-left:4px;">EXPIRÉ</span>`;
+                                            else if (daysLeft === 1) dlcBadge = `<span style="background:#dc2626;color:white;font-size:11px;font-weight:700;padding:2px 6px;border-radius:4px;margin-left:4px;">J-1 ⚠️</span>`;
+                                            else if (daysLeft === 2) dlcBadge = `<span style="background:var(--warning);color:white;font-size:11px;font-weight:700;padding:2px 6px;border-radius:4px;margin-left:4px;">J-2 ⚠️</span>`;
+                                            const lotValue = lot.getValeurActuelle ? lot.getValeurActuelle() : (lot.quantite * ((lot.prixTotal + (lot.fraisApproche||0)) / (lot.quantiteInitiale || 1)));
                                             
                                             return `
-                                                <tr style="border-bottom: 1px solid var(--light);">
+                                                <tr style="border-bottom: 1px solid var(--light);${daysLeft <= 2 ? 'background:#fff5f5;' : ''}">
                                                     <td style="padding: 12px;">${lot.numeroLot || lot.id.slice(0, 8)}</td>
                                                     <td style="padding: 12px;">${lot.fournisseur || '-'}</td>
                                                     <td style="padding: 12px; text-align: right; font-weight: 600;">${lot.quantite} ${ingredient.baseUnit}</td>
-                                                    <td style="padding: 12px; text-align: right;">${formatCurrency(lot.getValeurActuelle ? lot.getValeurActuelle() : 0)}</td>
+                                                    <td style="padding: 12px; text-align: right;">${formatCurrency(lotValue)}</td>
                                                     <td style="padding: 12px; color: ${dlcColor}; font-weight: 600;">
                                                         ${dlcDate.toLocaleDateString('fr-FR')}
-                                                        ${daysUntil < 30 ? `<br><small>(${daysUntil}j)</small>` : ''}
+                                                        ${dlcBadge}
                                                     </td>
-                                                    <td style="padding: 12px;">${new Date(lot.dateReception).toLocaleDateString('fr-FR')}</td>
+                                                    <td style="padding: 12px;">${lot.dateReception ? new Date(lot.dateReception).toLocaleDateString('fr-FR') : '-'}</td>
                                                 </tr>
                                             `;
                                         }).join('')}
@@ -6825,16 +6913,47 @@
                             </details>
                         ` : ''}
                         
+                        <!-- Loss History for this ingredient -->
+                        ${(() => {
+                            const ingLosses = (appState.data.lossHistory || []).filter(l => l.ingredientId === ingredientId).slice(-8).reverse();
+                            if (ingLosses.length === 0) return '';
+                            return `
+                                <h3 style="margin-bottom:var(--space-md);margin-top:var(--space-xl);">📉 Dernières pertes (${ingLosses.length})</h3>
+                                <div style="overflow-x:auto;margin-bottom:var(--space-lg);">
+                                    <table style="width:100%;border-collapse:collapse;font-size:13px;">
+                                        <thead style="background:var(--light);">
+                                            <tr>
+                                                <th style="padding:10px;text-align:left;">Date</th>
+                                                <th style="padding:10px;text-align:left;">Motif</th>
+                                                <th style="padding:10px;text-align:right;">Quantité</th>
+                                                <th style="padding:10px;text-align:right;">Valeur</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${ingLosses.map(l => `
+                                                <tr style="border-bottom:1px solid var(--light);">
+                                                    <td style="padding:10px;">${new Date(l.timestamp).toLocaleDateString('fr-FR')}</td>
+                                                    <td style="padding:10px;">${l.reason === 'chaine_froid' ? '❄️ Chaîne du froid' : l.reason === 'perime' ? '🕐 Périmé' : l.reason === 'casse' ? '💥 Casse' : l.reason}</td>
+                                                    <td style="padding:10px;text-align:right;font-weight:600;color:var(--danger);">-${l.quantity} ${l.unit}</td>
+                                                    <td style="padding:10px;text-align:right;">${formatCurrency(l.value || 0)}</td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            `;
+                        })()}
+                        
                         <!-- Actions -->
-                        <div style="display: flex; gap: var(--space-md); margin-top: var(--space-xl);">
+                        <div style="display: flex; gap: var(--space-md); margin-top: var(--space-xl); flex-wrap:wrap;">
                             <button class="btn btn-primary" onclick="closeModal('ingredientDetailsModal'); showAddLotModal('${ingredientId}');">
-                                ➕ Ajouter un lot
+                                ➕ Réception
                             </button>
                             <button class="btn" style="background: var(--danger); color: white;" onclick="closeModal('ingredientDetailsModal'); showRecordLossModal('${ingredientId}');">
-                                ❌ Enregistrer une perte
+                                🗑 Perte
                             </button>
                             <button class="btn" style="background: var(--secondary); color: white;" onclick="closeModal('ingredientDetailsModal'); showInventoryModal('${ingredientId}');">
-                                📊 Inventaire
+                                📋 Inventaire
                             </button>
                             <button class="btn" style="background: var(--gray); color: white; margin-left: auto;" onclick="closeModal('ingredientDetailsModal')">
                                 Fermer
@@ -7134,11 +7253,13 @@
                                 <label>Raison de la perte *</label>
                                 <select name="reason" required>
                                     <option value="">Sélectionner...</option>
-                                    <option value="casse">Casse / Détérioration</option>
-                                    <option value="dlc">DLC dépassée</option>
-                                    <option value="qualite">Problème qualité</option>
-                                    <option value="vol">Vol / Perte</option>
-                                    <option value="autre">Autre</option>
+                                    <option value="perime">🕐 Périmé (DLC dépassée)</option>
+                                    <option value="chaine_froid">❄️ Chaîne du froid rompue</option>
+                                    <option value="casse">💥 Casse / Détérioration physique</option>
+                                    <option value="contamination">☣️ Contamination / Hygiène</option>
+                                    <option value="qualite">⚠️ Problème qualité</option>
+                                    <option value="vol">🔒 Vol / Disparition</option>
+                                    <option value="autre">❓ Autre</option>
                                 </select>
                             </div>
                             
@@ -7150,6 +7271,9 @@
                             <div style="display: flex; gap: var(--space-md); margin-top: var(--space-lg);">
                                 <button type="button" class="btn" style="flex: 1; background: var(--gray); color: white;" onclick="closeModal('recordLossModal')">
                                     Annuler
+                                </button>
+                                <button type="button" class="btn" style="background:#ff6b35;color:white;padding:10px 16px;" title="Mettre le stock à zéro (tout jeter)" onclick="document.querySelector('[name=quantity]').value=${stock}; document.querySelector('[name=quantity]').dispatchEvent(new Event('change'));">
+                                    🗑 Tout jeter
                                 </button>
                                 <button type="submit" class="btn" style="flex: 1; background: var(--danger); color: white;">
                                     ❌ Enregistrer la perte
@@ -7207,6 +7331,21 @@
                 // Calculate loss value from lotsUsed
                 const lossValue = result.lotsUsed ? 
                     result.lotsUsed.reduce((sum, l) => sum + l.cost, 0) : 0;
+                
+                // Track in lossHistory for dashboard KPIs
+                if (!appState.data.lossHistory) appState.data.lossHistory = [];
+                appState.data.lossHistory.push({
+                    id: 'loss_' + Date.now(),
+                    timestamp: new Date().toISOString(),
+                    ingredientId,
+                    ingredientName: ingredient.name,
+                    quantity,
+                    unit: ingredient.baseUnit,
+                    reason,
+                    notes,
+                    value: lossValue
+                });
+                saveData();
                 
                 showToast(`✅ Perte enregistrée : -${quantity} ${ingredient.baseUnit} (${formatCurrency(lossValue)})`, 'success');
                 
@@ -7537,6 +7676,28 @@
                         <p>🚀 D'autres paramètres seront ajoutés prochainement</p>
                         <small>Thèmes, notifications, sauvegardes automatiques, etc.</small>
                     </div>
+                    
+                    <!-- Version & Diagnostic -->
+                    <div style="background:white;padding:var(--space-xl);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);margin-top:var(--space-xl);">
+                        <h2 style="margin-bottom:var(--space-md);font-family:var(--font-display);">ℹ️ Version & Diagnostic</h2>
+                        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:var(--space-md);margin-bottom:var(--space-lg);">
+                            <div style="background:var(--light);padding:var(--space-md);border-radius:var(--radius-md);text-align:center;">
+                                <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gray);margin-bottom:4px;">Version App</div>
+                                <div style="font-size:20px;font-weight:800;color:var(--primary);">v55.6-POLISH</div>
+                            </div>
+                            <div style="background:var(--light);padding:var(--space-md);border-radius:var(--radius-md);text-align:center;">
+                                <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gray);margin-bottom:4px;">Schema Version</div>
+                                <div style="font-size:20px;font-weight:800;color:var(--secondary);">55.6</div>
+                            </div>
+                            <div style="background:var(--light);padding:var(--space-md);border-radius:var(--radius-md);text-align:center;">
+                                <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gray);margin-bottom:4px;">Build Date</div>
+                                <div style="font-size:20px;font-weight:800;color:var(--dark);">2026-02-10</div>
+                            </div>
+                        </div>
+                        <button class="btn" style="background:var(--info);color:white;width:100%;" onclick="exportDiagnostic()">
+                            📊 Exporter diagnostic (sans données sensibles)
+                        </button>
+                    </div>
                 </div>
             `;
             
@@ -7636,6 +7797,15 @@
                 case 'settings':
                     renderSettingsPage();
                     break;
+                case 'expenses':
+                    renderExpensesPage();
+                    break;
+                case 'suppliers':
+                    renderSuppliersPage();
+                    break;
+                case 'clients':
+                    renderClientsPage();
+                    break;
                 default:
                     document.getElementById('mainContent').innerHTML = `<h1>${pageName} - En développement...</h1>`;
             }
@@ -7703,8 +7873,14 @@
                         sales: demoWESalon.sales || [],
                         expenses: demoWESalon.expenses || [],
                         categories: demoWESalon.categories || [],
+                        suppliers: demoWESalon.suppliers || [],
+                        clients: demoWESalon.clients || [],
+                        lossHistory: demoWESalon.lossHistory || [],
+                        movements: demoWESalon.movements || [],
                         vendors: demoWESalon.vendors || [],
-                        staff: demoWESalon.staff || []
+                        staff: demoWESalon.staff || [],
+                        packs: demoWESalon.packs || [],
+                        settings: demoWESalon.settings || appState.data.settings || {}
                     };
                     
                     // Sauvegarder
@@ -7773,6 +7949,12 @@
                         renderProductionsPage();
                     } else if (currentPage === 'sales') {
                         renderSalesPage();
+                    } else if (currentPage === 'expenses') {
+                        renderExpensesPage();
+                    } else if (currentPage === 'suppliers') {
+                        renderSuppliersPage();
+                    } else if (currentPage === 'clients') {
+                        renderClientsPage();
                     }
                     
                     // Show toast
@@ -8258,6 +8440,651 @@
                 renderRecipesPage();
                 showToast(`✅ ${count} recette${count > 1 ? 's' : ''} supprimée${count > 1 ? 's' : ''}`, 'success');
             }
+        };
+
+        // ========================================
+        // FICHE INGRÉDIENT (Edit)
+        // ========================================
+        window.showEditIngredientModal = function(ingredientId) {
+            const ing = appState.data.ingredients.find(i => i.id === ingredientId);
+            if (!ing) return;
+            const modal = document.createElement('div');
+            modal.id = 'editIngModal';
+            modal.className = 'modal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>✎ Fiche : ${ing.name}</h2>
+                        <button class="modal-close" onclick="closeModal('editIngModal')">✕</button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="editIngForm">
+                            <input type="hidden" name="id" value="${ing.id}">
+                            <div class="form-group"><label>Nom *</label>
+                                <input type="text" name="name" value="${ing.name}" required></div>
+                            <div class="form-row">
+                                <div class="form-group"><label>Catégorie</label>
+                                    <input type="text" name="category" value="${ing.category || ''}"></div>
+                                <div class="form-group"><label>Seuil alerte</label>
+                                    <input type="number" name="alertBaseQty" value="${ing.alertBaseQty || 0}" min="0" step="0.01" inputmode="decimal"></div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group"><label>Rendement (%)</label>
+                                    <input type="number" name="yieldPercent" value="${ing.yieldPercent || 100}" min="1" max="100" inputmode="decimal"></div>
+                                <div class="form-group"><label>Type déchet</label>
+                                    <input type="text" name="wasteType" value="${ing.wasteType || ''}"></div>
+                            </div>
+                            <div style="display:flex;gap:var(--space-md);margin-top:var(--space-lg);">
+                                <button type="button" class="btn" style="flex:1" onclick="closeModal('editIngModal')">Annuler</button>
+                                <button type="submit" class="btn btn-primary" style="flex:1">💾 Enregistrer</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>`;
+            document.body.appendChild(modal);
+            modal.querySelector('#editIngForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const fd = new FormData(e.target);
+                const idx = appState.data.ingredients.findIndex(i => i.id === fd.get('id'));
+                if (idx !== -1) {
+                    appState.data.ingredients[idx].name = fd.get('name');
+                    appState.data.ingredients[idx].category = fd.get('category');
+                    appState.data.ingredients[idx].alertBaseQty = Number(fd.get('alertBaseQty')) || 0;
+                    appState.data.ingredients[idx].yieldPercent = Number(fd.get('yieldPercent')) || 100;
+                    appState.data.ingredients[idx].wasteType = fd.get('wasteType');
+                    appState.data.ingredients[idx].updatedAt = new Date().toISOString();
+                    saveData();
+                    closeModal('editIngModal');
+                    renderIngredientsPage();
+                    showToast('✅ Fiche mise à jour', 'success');
+                }
+            });
+        };
+
+        // ========================================
+        // MODULE DÉPENSES
+        // ========================================
+        function renderExpensesPage() {
+            const expenses = (appState.data.expenses || []).sort((a,b) => new Date(b.date) - new Date(a.date));
+            const now = new Date();
+            const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+            const monthExpenses = expenses.filter(e => new Date(e.date) >= monthStart);
+            const monthTotal = monthExpenses.reduce((s, e) => s + (e.amount || 0), 0);
+            
+            const CATEGORIES = ['Loyer','Énergie','Salaires','Équipement','Emballages','Livraison','Marketing','Assurance','Maintenance','Autre'];
+            
+            const filterMonth = document.getElementById('expFilterMonth') ? 
+                document.getElementById('expFilterMonth').value : (now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0'));
+            
+            const displayExpenses = expenses.filter(e => {
+                if (!filterMonth) return true;
+                return (e.date || '').startsWith(filterMonth);
+            });
+            const displayTotal = displayExpenses.reduce((s,e) => s + (e.amount||0), 0);
+            
+            document.getElementById('mainContent').innerHTML = `
+                <div class="page-header">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <div>
+                            <h1 class="page-title">💸 Dépenses</h1>
+                            <p class="page-subtitle">${expenses.length} dépense${expenses.length!==1?'s':''} • Mois en cours : ${formatCurrency(monthTotal)}</p>
+                        </div>
+                        <button class="btn btn-primary" onclick="showNewExpenseModal()">➕ Nouvelle dépense</button>
+                    </div>
+                </div>
+                
+                <!-- Filtres + total mois -->
+                <div style="background:white;padding:var(--space-md);border-radius:var(--radius-lg);margin-bottom:var(--space-md);box-shadow:var(--shadow-sm);display:flex;gap:var(--space-md);align-items:center;flex-wrap:wrap;">
+                    <div>
+                        <label style="font-size:12px;font-weight:600;color:var(--gray);display:block;margin-bottom:4px;">Mois</label>
+                        <input type="month" id="expFilterMonth" value="${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}" 
+                            onchange="renderExpensesPage()" 
+                            style="padding:10px 14px;border:2px solid var(--light);border-radius:var(--radius-md);font-family:var(--font-body);">
+                    </div>
+                    <div style="margin-left:auto;background:linear-gradient(135deg,#ff6b35,#ffe66d);padding:12px 24px;border-radius:var(--radius-lg);color:white;font-weight:700;">
+                        Total affiché : ${formatCurrency(displayTotal)}
+                    </div>
+                </div>
+                
+                <!-- Liste dépenses -->
+                ${displayExpenses.length === 0 ? `
+                    <div style="text-align:center;padding:var(--space-xl);background:white;border-radius:var(--radius-lg);">
+                        <div style="font-size:56px;margin-bottom:var(--space-md);">💸</div>
+                        <h3>Aucune dépense pour cette période</h3>
+                        <p style="color:var(--gray);margin-bottom:var(--space-md);">Ajoutez vos charges fixes et variables</p>
+                        <button class="btn btn-primary" onclick="showNewExpenseModal()">➕ Ajouter une dépense</button>
+                    </div>
+                ` : `
+                    <div style="background:white;border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);overflow:hidden;">
+                        <table style="width:100%;border-collapse:collapse;">
+                            <thead>
+                                <tr style="background:var(--light);">
+                                    <th style="padding:14px 16px;text-align:left;font-size:12px;text-transform:uppercase;color:var(--gray);">Date</th>
+                                    <th style="padding:14px 16px;text-align:left;font-size:12px;text-transform:uppercase;color:var(--gray);">Libellé</th>
+                                    <th style="padding:14px 16px;text-align:left;font-size:12px;text-transform:uppercase;color:var(--gray);">Catégorie</th>
+                                    <th style="padding:14px 16px;text-align:right;font-size:12px;text-transform:uppercase;color:var(--gray);">Montant</th>
+                                    <th style="padding:14px 16px;text-align:center;font-size:12px;text-transform:uppercase;color:var(--gray);">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${displayExpenses.map(e => `
+                                    <tr style="border-top:1px solid var(--light);transition:background 0.2s;" onmouseover="this.style.background='#f9f9f9'" onmouseout="this.style.background=''">
+                                        <td style="padding:12px 16px;font-size:14px;">${new Date(e.date).toLocaleDateString('fr-FR')}</td>
+                                        <td style="padding:12px 16px;font-weight:600;">${e.label || e.description || '—'}</td>
+                                        <td style="padding:12px 16px;">
+                                            <span style="background:var(--light);padding:4px 10px;border-radius:12px;font-size:12px;font-weight:600;">${e.category || 'Autre'}</span>
+                                        </td>
+                                        <td style="padding:12px 16px;text-align:right;font-weight:700;color:var(--danger);">${formatCurrency(e.amount || 0)}</td>
+                                        <td style="padding:12px 16px;text-align:center;">
+                                            <button onclick="editExpense('${e.id}')" style="background:none;border:none;cursor:pointer;font-size:18px;margin:0 4px;" title="Modifier">✏️</button>
+                                            <button onclick="deleteExpense('${e.id}')" style="background:none;border:none;cursor:pointer;font-size:18px;margin:0 4px;" title="Supprimer">🗑️</button>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `}
+            `;
+        }
+        
+        window.showNewExpenseModal = function() {
+            const modal = document.createElement('div');
+            modal.id = 'newExpenseModal'; modal.className = 'modal';
+            const today = new Date().toISOString().split('T')[0];
+            const cats = ['Loyer','Énergie','Salaires','Équipement','Emballages','Livraison','Marketing','Assurance','Maintenance','Autre'];
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>💸 Nouvelle dépense</h2>
+                        <button class="modal-close" onclick="closeModal('newExpenseModal')">✕</button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="newExpenseForm">
+                            <div class="form-group"><label>Libellé *</label>
+                                <input type="text" id="expLabel" required placeholder="Ex: Loyer janvier"></div>
+                            <div class="form-row">
+                                <div class="form-group"><label>Catégorie *</label>
+                                    <select id="expCat" required>
+                                        ${cats.map(c => `<option value="${c}">${c}</option>`).join('')}
+                                    </select>
+                                </div>
+                                <div class="form-group"><label>Date *</label>
+                                    <input type="date" id="expDate" value="${today}" required></div>
+                            </div>
+                            <div class="form-group"><label>Montant (${appState.currentCurrency}) *</label>
+                                <input type="number" id="expAmount" required min="0.01" step="0.01" inputmode="decimal" placeholder="0.00"></div>
+                            <div class="form-group"><label>Notes</label>
+                                <textarea id="expNotes" rows="2" style="width:100%;padding:12px;border:2px solid var(--light);border-radius:var(--radius-md);font-family:var(--font-body);" placeholder="Informations complémentaires..."></textarea></div>
+                            <div style="display:flex;gap:var(--space-md);margin-top:var(--space-lg);">
+                                <button type="button" class="btn" style="flex:1" onclick="closeModal('newExpenseModal')">Annuler</button>
+                                <button type="submit" class="btn btn-primary" style="flex:1">💾 Enregistrer</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>`;
+            document.body.appendChild(modal);
+            modal.querySelector('#newExpenseForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const exp = {
+                    id: 'exp_' + Date.now(),
+                    label: document.getElementById('expLabel').value,
+                    category: document.getElementById('expCat').value,
+                    date: document.getElementById('expDate').value,
+                    amount: Number(document.getElementById('expAmount').value),
+                    currency: appState.currentCurrency,
+                    notes: document.getElementById('expNotes').value,
+                    createdAt: new Date().toISOString()
+                };
+                if (!appState.data.expenses) appState.data.expenses = [];
+                appState.data.expenses.push(exp);
+                saveData();
+                closeModal('newExpenseModal');
+                renderExpensesPage();
+                showToast('✅ Dépense enregistrée', 'success');
+            });
+        };
+        
+        window.editExpense = function(id) {
+            const exp = (appState.data.expenses || []).find(e => e.id === id);
+            if (!exp) return;
+            const cats = ['Loyer','Énergie','Salaires','Équipement','Emballages','Livraison','Marketing','Assurance','Maintenance','Autre'];
+            const modal = document.createElement('div');
+            modal.id = 'editExpenseModal'; modal.className = 'modal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>✏️ Modifier dépense</h2>
+                        <button class="modal-close" onclick="closeModal('editExpenseModal')">✕</button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="editExpenseForm">
+                            <input type="hidden" id="editExpId" value="${exp.id}">
+                            <div class="form-group"><label>Libellé *</label>
+                                <input type="text" id="editExpLabel" value="${exp.label || exp.description || ''}" required></div>
+                            <div class="form-row">
+                                <div class="form-group"><label>Catégorie</label>
+                                    <select id="editExpCat">
+                                        ${cats.map(c => `<option value="${c}" ${exp.category===c?'selected':''}>${c}</option>`).join('')}
+                                    </select>
+                                </div>
+                                <div class="form-group"><label>Date *</label>
+                                    <input type="date" id="editExpDate" value="${exp.date || ''}" required></div>
+                            </div>
+                            <div class="form-group"><label>Montant *</label>
+                                <input type="number" id="editExpAmount" value="${exp.amount || 0}" required min="0.01" step="0.01" inputmode="decimal"></div>
+                            <div style="display:flex;gap:var(--space-md);margin-top:var(--space-lg);">
+                                <button type="button" class="btn" style="flex:1" onclick="closeModal('editExpenseModal')">Annuler</button>
+                                <button type="submit" class="btn btn-primary" style="flex:1">💾 Enregistrer</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>`;
+            document.body.appendChild(modal);
+            modal.querySelector('#editExpenseForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const idx = (appState.data.expenses||[]).findIndex(ex => ex.id === document.getElementById('editExpId').value);
+                if (idx !== -1) {
+                    appState.data.expenses[idx].label = document.getElementById('editExpLabel').value;
+                    appState.data.expenses[idx].category = document.getElementById('editExpCat').value;
+                    appState.data.expenses[idx].date = document.getElementById('editExpDate').value;
+                    appState.data.expenses[idx].amount = Number(document.getElementById('editExpAmount').value);
+                    saveData(); closeModal('editExpenseModal'); renderExpensesPage();
+                    showToast('✅ Dépense modifiée', 'success');
+                }
+            });
+        };
+        
+        window.deleteExpense = function(id) {
+            if (!confirm('Supprimer cette dépense ?')) return;
+            appState.data.expenses = (appState.data.expenses||[]).filter(e => e.id !== id);
+            saveData(); renderExpensesPage();
+            showToast('🗑️ Dépense supprimée', 'success');
+        };
+        
+        // ========================================
+        // MODULE FOURNISSEURS
+        // ========================================
+        function renderSuppliersPage() {
+            const suppliers = appState.data.suppliers || [];
+            document.getElementById('mainContent').innerHTML = `
+                <div class="page-header">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <div>
+                            <h1 class="page-title">🚚 Fournisseurs</h1>
+                            <p class="page-subtitle">${suppliers.length} fournisseur${suppliers.length!==1?'s':''}</p>
+                        </div>
+                        <div style="display:flex;gap:var(--space-sm);">
+                            <button class="btn" style="background:var(--secondary);color:white;" onclick="exportSuppliers()">📤 Exporter</button>
+                            <button class="btn btn-primary" onclick="showNewSupplierModal()">➕ Nouveau fournisseur</button>
+                        </div>
+                    </div>
+                </div>
+                
+                ${suppliers.length === 0 ? `
+                    <div style="text-align:center;padding:var(--space-xl);background:white;border-radius:var(--radius-lg);">
+                        <div style="font-size:56px;margin-bottom:var(--space-md);">🚚</div>
+                        <h3>Aucun fournisseur</h3>
+                        <p style="color:var(--gray);margin-bottom:var(--space-md);">Ajoutez vos fournisseurs pour gérer vos approvisionnements</p>
+                        <button class="btn btn-primary" onclick="showNewSupplierModal()">➕ Ajouter un fournisseur</button>
+                    </div>
+                ` : `
+                    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:var(--space-md);">
+                        ${suppliers.map(s => `
+                            <div class="ingredient-card">
+                                <div class="ingredient-header">
+                                    <div>
+                                        <h3 class="ingredient-name">🚚 ${s.name}</h3>
+                                        <span class="ingredient-category">${s.category || 'Général'}</span>
+                                    </div>
+                                </div>
+                                <div style="font-size:13px;color:var(--gray);margin-bottom:var(--space-sm);">
+                                    ${s.contact ? `<div>👤 ${s.contact}</div>` : ''}
+                                    ${s.phone ? `<div>📞 ${s.phone}</div>` : ''}
+                                    ${s.email ? `<div>📧 ${s.email}</div>` : ''}
+                                    ${s.address ? `<div>📍 ${s.address}</div>` : ''}
+                                </div>
+                                ${s.notes ? `<div style="font-size:12px;color:var(--gray);font-style:italic;margin-bottom:var(--space-sm);">${s.notes}</div>` : ''}
+                                <div class="ingredient-actions">
+                                    <button class="action-btn" onclick="editSupplier('${s.id}')" title="Modifier">✏️</button>
+                                    <button class="action-btn" onclick="deleteSupplier('${s.id}')" title="Supprimer" style="color:var(--danger);">🗑️</button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `}
+            `;
+        }
+        
+        window.showNewSupplierModal = function() {
+            const modal = document.createElement('div');
+            modal.id = 'newSupplierModal'; modal.className = 'modal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>🚚 Nouveau fournisseur</h2>
+                        <button class="modal-close" onclick="closeModal('newSupplierModal')">✕</button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="newSupplierForm">
+                            <div class="form-group"><label>Nom *</label>
+                                <input type="text" id="supName" required placeholder="Ex: Metro France"></div>
+                            <div class="form-row">
+                                <div class="form-group"><label>Catégorie</label>
+                                    <select id="supCat">
+                                        <option value="Grossiste">Grossiste</option>
+                                        <option value="Producteur">Producteur local</option>
+                                        <option value="Épicerie">Épicerie / Cash</option>
+                                        <option value="Boucherie">Boucherie</option>
+                                        <option value="Marché">Marché</option>
+                                        <option value="Autre">Autre</option>
+                                    </select>
+                                </div>
+                                <div class="form-group"><label>Contact</label>
+                                    <input type="text" id="supContact" placeholder="Nom du représentant"></div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group"><label>Téléphone</label>
+                                    <input type="tel" id="supPhone"></div>
+                                <div class="form-group"><label>Email</label>
+                                    <input type="email" id="supEmail"></div>
+                            </div>
+                            <div class="form-group"><label>Adresse</label>
+                                <input type="text" id="supAddress"></div>
+                            <div class="form-group"><label>Notes</label>
+                                <textarea id="supNotes" rows="2" style="width:100%;padding:12px;border:2px solid var(--light);border-radius:var(--radius-md);font-family:var(--font-body);"></textarea></div>
+                            <div style="display:flex;gap:var(--space-md);margin-top:var(--space-lg);">
+                                <button type="button" class="btn" style="flex:1" onclick="closeModal('newSupplierModal')">Annuler</button>
+                                <button type="submit" class="btn btn-primary" style="flex:1">💾 Enregistrer</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>`;
+            document.body.appendChild(modal);
+            modal.querySelector('#newSupplierForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const sup = {
+                    id: 'sup_' + Date.now(),
+                    name: document.getElementById('supName').value,
+                    category: document.getElementById('supCat').value,
+                    contact: document.getElementById('supContact').value,
+                    phone: document.getElementById('supPhone').value,
+                    email: document.getElementById('supEmail').value,
+                    address: document.getElementById('supAddress').value,
+                    notes: document.getElementById('supNotes').value,
+                    createdAt: new Date().toISOString()
+                };
+                if (!appState.data.suppliers) appState.data.suppliers = [];
+                appState.data.suppliers.push(sup);
+                saveData(); closeModal('newSupplierModal'); renderSuppliersPage();
+                showToast('✅ Fournisseur ajouté', 'success');
+            });
+        };
+        
+        window.editSupplier = function(id) {
+            const s = (appState.data.suppliers||[]).find(x => x.id === id);
+            if (!s) return;
+            const modal = document.createElement('div');
+            modal.id = 'editSupplierModal'; modal.className = 'modal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header"><h2>✏️ Modifier fournisseur</h2>
+                        <button class="modal-close" onclick="closeModal('editSupplierModal')">✕</button></div>
+                    <div class="modal-body">
+                        <form id="editSupplierForm">
+                            <input type="hidden" id="editSupId" value="${s.id}">
+                            <div class="form-group"><label>Nom *</label><input type="text" id="editSupName" value="${s.name}" required></div>
+                            <div class="form-row">
+                                <div class="form-group"><label>Contact</label><input type="text" id="editSupContact" value="${s.contact||''}"></div>
+                                <div class="form-group"><label>Téléphone</label><input type="tel" id="editSupPhone" value="${s.phone||''}"></div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group"><label>Email</label><input type="email" id="editSupEmail" value="${s.email||''}"></div>
+                                <div class="form-group"><label>Adresse</label><input type="text" id="editSupAddress" value="${s.address||''}"></div>
+                            </div>
+                            <div class="form-group"><label>Notes</label>
+                                <textarea id="editSupNotes" rows="2" style="width:100%;padding:12px;border:2px solid var(--light);border-radius:var(--radius-md);font-family:var(--font-body);">${s.notes||''}</textarea></div>
+                            <div style="display:flex;gap:var(--space-md);margin-top:var(--space-lg);">
+                                <button type="button" class="btn" style="flex:1" onclick="closeModal('editSupplierModal')">Annuler</button>
+                                <button type="submit" class="btn btn-primary" style="flex:1">💾 Enregistrer</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>`;
+            document.body.appendChild(modal);
+            modal.querySelector('#editSupplierForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const idx = (appState.data.suppliers||[]).findIndex(x => x.id === document.getElementById('editSupId').value);
+                if (idx !== -1) {
+                    appState.data.suppliers[idx] = {
+                        ...appState.data.suppliers[idx],
+                        name: document.getElementById('editSupName').value,
+                        contact: document.getElementById('editSupContact').value,
+                        phone: document.getElementById('editSupPhone').value,
+                        email: document.getElementById('editSupEmail').value,
+                        address: document.getElementById('editSupAddress').value,
+                        notes: document.getElementById('editSupNotes').value
+                    };
+                    saveData(); closeModal('editSupplierModal'); renderSuppliersPage();
+                    showToast('✅ Fournisseur modifié', 'success');
+                }
+            });
+        };
+        
+        window.deleteSupplier = function(id) {
+            if (!confirm('Supprimer ce fournisseur ?')) return;
+            appState.data.suppliers = (appState.data.suppliers||[]).filter(s => s.id !== id);
+            saveData(); renderSuppliersPage();
+            showToast('🗑️ Fournisseur supprimé', 'success');
+        };
+        
+        window.exportSuppliers = function() {
+            const suppliers = appState.data.suppliers || [];
+            const rows = [['Nom','Catégorie','Contact','Téléphone','Email','Adresse','Notes']];
+            suppliers.forEach(s => rows.push([s.name||'',s.category||'',s.contact||'',s.phone||'',s.email||'',s.address||'',s.notes||'']));
+            const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+            const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+            a.download = 'BFM_Fournisseurs.csv'; a.click();
+            showToast('📤 Export fournisseurs téléchargé', 'success');
+        };
+        
+        // ========================================
+        // MODULE CLIENTS
+        // ========================================
+        function renderClientsPage() {
+            const clients = appState.data.clients || [];
+            const sales = appState.data.sales || [];
+            
+            document.getElementById('mainContent').innerHTML = `
+                <div class="page-header">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <div>
+                            <h1 class="page-title">👤 Clients</h1>
+                            <p class="page-subtitle">${clients.length} client${clients.length!==1?'s':''}</p>
+                        </div>
+                        <div style="display:flex;gap:var(--space-sm);">
+                            <button class="btn" style="background:var(--secondary);color:white;" onclick="exportClients()">📤 Exporter</button>
+                            <button class="btn btn-primary" onclick="showNewClientModal()">➕ Nouveau client</button>
+                        </div>
+                    </div>
+                </div>
+                
+                ${clients.length === 0 ? `
+                    <div style="text-align:center;padding:var(--space-xl);background:white;border-radius:var(--radius-lg);">
+                        <div style="font-size:56px;margin-bottom:var(--space-md);">👤</div>
+                        <h3>Aucun client enregistré</h3>
+                        <p style="color:var(--gray);margin-bottom:var(--space-md);">Gérez vos clients professionnels et habituels</p>
+                        <button class="btn btn-primary" onclick="showNewClientModal()">➕ Ajouter un client</button>
+                    </div>
+                ` : `
+                    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:var(--space-md);">
+                        ${clients.map(c => {
+                            const clientSales = sales.filter(s => s.clientId === c.id);
+                            const totalCA = clientSales.reduce((sum, s) => sum + (s.revenue || 0), 0);
+                            return `
+                                <div class="ingredient-card">
+                                    <div class="ingredient-header">
+                                        <div>
+                                            <h3 class="ingredient-name">👤 ${c.name}</h3>
+                                            <span class="ingredient-category">${(c.tags||[]).join(', ') || 'Client'}</span>
+                                        </div>
+                                        ${totalCA > 0 ? `<div style="font-weight:700;color:var(--success);">${formatCurrency(totalCA)}</div>` : ''}
+                                    </div>
+                                    <div style="font-size:13px;color:var(--gray);margin-bottom:var(--space-sm);">
+                                        ${c.phone ? `<div>📞 ${c.phone}</div>` : ''}
+                                        ${c.email ? `<div>📧 ${c.email}</div>` : ''}
+                                        ${clientSales.length > 0 ? `<div>🛒 ${clientSales.length} commande${clientSales.length!==1?'s':''}</div>` : ''}
+                                    </div>
+                                    ${c.notes ? `<div style="font-size:12px;color:var(--gray);font-style:italic;margin-bottom:var(--space-sm);">${c.notes}</div>` : ''}
+                                    <div class="ingredient-actions">
+                                        <button class="action-btn" onclick="editClient('${c.id}')" title="Modifier">✏️</button>
+                                        <button class="action-btn" onclick="deleteClient('${c.id}')" title="Supprimer" style="color:var(--danger);">🗑️</button>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `}
+            `;
+        }
+        
+        window.showNewClientModal = function() {
+            const modal = document.createElement('div');
+            modal.id = 'newClientModal'; modal.className = 'modal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header"><h2>👤 Nouveau client</h2>
+                        <button class="modal-close" onclick="closeModal('newClientModal')">✕</button></div>
+                    <div class="modal-body">
+                        <form id="newClientForm">
+                            <div class="form-group"><label>Nom / Raison sociale *</label>
+                                <input type="text" id="cliName" required placeholder="Ex: Restaurant Le Gourmet"></div>
+                            <div class="form-row">
+                                <div class="form-group"><label>Téléphone</label><input type="tel" id="cliPhone"></div>
+                                <div class="form-group"><label>Email</label><input type="email" id="cliEmail"></div>
+                            </div>
+                            <div class="form-group"><label>Tags (séparés par virgule)</label>
+                                <input type="text" id="cliTags" placeholder="VIP, Professionnel, Habituel"></div>
+                            <div class="form-group"><label>Notes</label>
+                                <textarea id="cliNotes" rows="2" style="width:100%;padding:12px;border:2px solid var(--light);border-radius:var(--radius-md);font-family:var(--font-body);"></textarea></div>
+                            <div style="display:flex;gap:var(--space-md);margin-top:var(--space-lg);">
+                                <button type="button" class="btn" style="flex:1" onclick="closeModal('newClientModal')">Annuler</button>
+                                <button type="submit" class="btn btn-primary" style="flex:1">💾 Enregistrer</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>`;
+            document.body.appendChild(modal);
+            modal.querySelector('#newClientForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const cli = {
+                    id: 'cli_' + Date.now(),
+                    name: document.getElementById('cliName').value,
+                    phone: document.getElementById('cliPhone').value,
+                    email: document.getElementById('cliEmail').value,
+                    tags: document.getElementById('cliTags').value.split(',').map(t=>t.trim()).filter(Boolean),
+                    notes: document.getElementById('cliNotes').value,
+                    createdAt: new Date().toISOString()
+                };
+                if (!appState.data.clients) appState.data.clients = [];
+                appState.data.clients.push(cli);
+                saveData(); closeModal('newClientModal'); renderClientsPage();
+                showToast('✅ Client ajouté', 'success');
+            });
+        };
+        
+        window.editClient = function(id) {
+            const c = (appState.data.clients||[]).find(x => x.id === id);
+            if (!c) return;
+            const modal = document.createElement('div');
+            modal.id = 'editClientModal'; modal.className = 'modal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header"><h2>✏️ Modifier client</h2>
+                        <button class="modal-close" onclick="closeModal('editClientModal')">✕</button></div>
+                    <div class="modal-body">
+                        <form id="editClientForm">
+                            <input type="hidden" id="editCliId" value="${c.id}">
+                            <div class="form-group"><label>Nom *</label><input type="text" id="editCliName" value="${c.name}" required></div>
+                            <div class="form-row">
+                                <div class="form-group"><label>Téléphone</label><input type="tel" id="editCliPhone" value="${c.phone||''}"></div>
+                                <div class="form-group"><label>Email</label><input type="email" id="editCliEmail" value="${c.email||''}"></div>
+                            </div>
+                            <div class="form-group"><label>Tags</label><input type="text" id="editCliTags" value="${(c.tags||[]).join(', ')}"></div>
+                            <div class="form-group"><label>Notes</label>
+                                <textarea id="editCliNotes" rows="2" style="width:100%;padding:12px;border:2px solid var(--light);border-radius:var(--radius-md);font-family:var(--font-body);">${c.notes||''}</textarea></div>
+                            <div style="display:flex;gap:var(--space-md);margin-top:var(--space-lg);">
+                                <button type="button" class="btn" style="flex:1" onclick="closeModal('editClientModal')">Annuler</button>
+                                <button type="submit" class="btn btn-primary" style="flex:1">💾 Enregistrer</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>`;
+            document.body.appendChild(modal);
+            modal.querySelector('#editClientForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const idx = (appState.data.clients||[]).findIndex(x => x.id === document.getElementById('editCliId').value);
+                if (idx !== -1) {
+                    appState.data.clients[idx] = {
+                        ...appState.data.clients[idx],
+                        name: document.getElementById('editCliName').value,
+                        phone: document.getElementById('editCliPhone').value,
+                        email: document.getElementById('editCliEmail').value,
+                        tags: document.getElementById('editCliTags').value.split(',').map(t=>t.trim()).filter(Boolean),
+                        notes: document.getElementById('editCliNotes').value
+                    };
+                    saveData(); closeModal('editClientModal'); renderClientsPage();
+                    showToast('✅ Client modifié', 'success');
+                }
+            });
+        };
+        
+        window.deleteClient = function(id) {
+            if (!confirm('Supprimer ce client ?')) return;
+            appState.data.clients = (appState.data.clients||[]).filter(c => c.id !== id);
+            saveData(); renderClientsPage();
+            showToast('🗑️ Client supprimé', 'success');
+        };
+        
+        window.exportClients = function() {
+            const clients = appState.data.clients || [];
+            const rows = [['Nom','Téléphone','Email','Tags','Notes']];
+            clients.forEach(c => rows.push([c.name||'',c.phone||'',c.email||'',(c.tags||[]).join('|'),c.notes||'']));
+            const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+            const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+            a.download = 'BFM_Clients.csv'; a.click();
+            showToast('📤 Export clients téléchargé', 'success');
+        };
+
+        // ========================================
+        // DIAGNOSTIC & VERSION
+        // ========================================
+        window.exportDiagnostic = function() {
+            const diag = {
+                version: 'v55.6-POLISH',
+                schemaVersion: '55.6',
+                buildDate: '2026-02-10',
+                timestamp: new Date().toISOString(),
+                counts: {
+                    ingredients: (appState.data.ingredients||[]).length,
+                    recipes: (appState.data.recipes||[]).length,
+                    productions: (appState.data.productions||[]).length,
+                    sales: (appState.data.sales||[]).length,
+                    expenses: (appState.data.expenses||[]).length,
+                    suppliers: (appState.data.suppliers||[]).length,
+                    clients: (appState.data.clients||[]).length,
+                    staff: (appState.data.staff||[]).length,
+                    lossHistory: (appState.data.lossHistory||[]).length
+                },
+                currency: appState.currentCurrency,
+                lang: appState.currentLang
+            };
+            const blob = new Blob([JSON.stringify(diag, null, 2)], {type:'application/json'});
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+            a.download = 'BFM_Diagnostic.json'; a.click();
+            showToast('📊 Diagnostic exporté', 'success');
         };
 
         // Start app
