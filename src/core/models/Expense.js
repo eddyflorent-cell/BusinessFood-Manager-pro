@@ -43,12 +43,16 @@ export class Expense {
   }
 
   toJSON() {
+    // Robuste : date peut être un objet Date ou une string selon le contexte
+    const dateValue = this.date instanceof Date
+      ? this.date.toISOString().slice(0, 10)
+      : (typeof this.date === 'string' ? this.date.slice(0, 10) : String(this.date).slice(0, 10));
     return {
       id: this.id,
       category: this.category,
       description: this.description,
       amount: this.amount,
-      date: this.date.toISOString(),
+      date: dateValue,
       paymentMethod: this.paymentMethod,
       notes: this.notes
     };

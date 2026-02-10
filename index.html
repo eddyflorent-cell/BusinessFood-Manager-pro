@@ -8504,6 +8504,16 @@
         // ========================================
         // MODULE DÉPENSES
         // ========================================
+
+        /** Convertit n'importe quel type de date en string ISO (ex: "2026-01-09") */
+        function dateStr(v) {
+            if (!v) return "";
+            if (typeof v === "string") return v;
+            if (v instanceof Date) return v.toISOString();
+            if (typeof v === "number") return new Date(v).toISOString();
+            return String(v);
+        }
+
         function renderExpensesPage() {
             const expenses = (appState.data.expenses || []).sort((a,b) => new Date(b.date) - new Date(a.date));
             const now = new Date();
@@ -8518,7 +8528,7 @@
             
             const displayExpenses = expenses.filter(e => {
                 if (!filterMonth) return true;
-                return (e.date || '').startsWith(filterMonth);
+                return dateStr(e.date).startsWith(filterMonth);
             });
             const displayTotal = displayExpenses.reduce((s,e) => s + (e.amount||0), 0);
             
@@ -8626,12 +8636,15 @@
             document.body.appendChild(modal);
             modal.querySelector('#newExpenseForm').addEventListener('submit', function(e) {
                 e.preventDefault();
+                const label = document.getElementById('expLabel').value;
+                const amount = Number(document.getElementById('expAmount').value);
+                if (!confirm(`Confirmer l'enregistrement ?\n\n📝 ${label}\n💰 ${formatCurrency(amount)}`)) return;
                 const exp = {
                     id: 'exp_' + Date.now(),
-                    label: document.getElementById('expLabel').value,
+                    label: label,
                     category: document.getElementById('expCat').value,
-                    date: document.getElementById('expDate').value,
-                    amount: Number(document.getElementById('expAmount').value),
+                    date: dateStr(document.getElementById('expDate').value).slice(0, 10),
+                    amount: amount,
                     currency: appState.currentCurrency,
                     notes: document.getElementById('expNotes').value,
                     createdAt: new Date().toISOString()
@@ -8685,10 +8698,13 @@
                 e.preventDefault();
                 const idx = (appState.data.expenses||[]).findIndex(ex => ex.id === document.getElementById('editExpId').value);
                 if (idx !== -1) {
-                    appState.data.expenses[idx].label = document.getElementById('editExpLabel').value;
+                    const label = document.getElementById('editExpLabel').value;
+                    const amount = Number(document.getElementById('editExpAmount').value);
+                    if (!confirm(`Confirmer la modification ?\n\n📝 ${label}\n💰 ${formatCurrency(amount)}`)) return;
+                    appState.data.expenses[idx].label = label;
                     appState.data.expenses[idx].category = document.getElementById('editExpCat').value;
-                    appState.data.expenses[idx].date = document.getElementById('editExpDate').value;
-                    appState.data.expenses[idx].amount = Number(document.getElementById('editExpAmount').value);
+                    appState.data.expenses[idx].date = dateStr(document.getElementById('editExpDate').value).slice(0, 10);
+                    appState.data.expenses[idx].amount = amount;
                     saveData(); closeModal('editExpenseModal'); renderExpensesPage();
                     showToast('✅ Dépense modifiée', 'success');
                 }
