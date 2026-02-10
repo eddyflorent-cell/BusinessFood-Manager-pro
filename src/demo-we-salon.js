@@ -792,8 +792,207 @@ PÂTE À GAUFRES:
     }
   ],
 
-  productions: [],
-  sales: [],
+  productions: [
+    // Production de Gaufres au Chocolat
+    {
+      id: 'prod_001',
+      recipeId: 'rec_gaufre_chocolat',
+      recipeName: 'Gaufres au Chocolat (1kg farine)',
+      producedQty: 50,
+      producedUnit: 'piece',
+      remainingQty: 15, // Il en reste 15 (35 vendues)
+      costPerUnit: 0.58, // Coût calculé
+      productionDate: new Date('2026-02-09').toISOString(),
+      operatorName: 'Sophie Durand',
+      notes: 'Production du matin',
+      lotReferences: ['lot_farine_001', 'lot_cacao_001']
+    },
+    // Production de Gaufres au Citron
+    {
+      id: 'prod_002',
+      recipeId: 'rec_gaufre_citron',
+      recipeName: 'Gaufres au Citron (1kg farine)',
+      producedQty: 50,
+      producedUnit: 'piece',
+      remainingQty: 28, // Il en reste 28 (22 vendues)
+      costPerUnit: 0.52,
+      productionDate: new Date('2026-02-09').toISOString(),
+      operatorName: 'Sophie Durand',
+      notes: 'Production après-midi',
+      lotReferences: ['lot_farine_001', 'lot_citrons_001']
+    },
+    // Production de Smoothie Framboise
+    {
+      id: 'prod_003',
+      recipeId: 'rec_smoothie_framboise',
+      recipeName: 'Smoothie Framboise Banane (10 portions)',
+      producedQty: 10,
+      producedUnit: 'portion',
+      remainingQty: 2, // Il en reste 2 (8 vendues)
+      costPerUnit: 1.85,
+      productionDate: new Date('2026-02-10').toISOString(),
+      operatorName: 'Marc Petit',
+      notes: 'Préparation fraîche du jour',
+      lotReferences: ['lot_framboises_001', 'lot_bananes_001']
+    }
+  ],
+  
+  sales: [
+    // Vente 1 : 10 Gaufres Chocolat
+    {
+      id: 'sale_001',
+      saleDate: new Date('2026-02-09T10:30:00').toISOString(),
+      items: [
+        {
+          productionId: 'prod_001',
+          itemName: 'Gaufres au Chocolat',
+          quantity: 10,
+          unit: 'piece',
+          unitPrice: 2.50,
+          costPerUnit: 0.58
+        }
+      ],
+      revenue: 25.00, // 10 × 2.50
+      cogs: 5.80, // 10 × 0.58
+      margin: 19.20,
+      marginPercent: 76.8,
+      vendorId: 'vendor_sophie',
+      vendorName: 'Sophie Durand',
+      commission: 1.25, // 5% de 25€
+      notes: 'Vente matinée - Client régulier'
+    },
+    // Vente 2 : 5 Gaufres Citron
+    {
+      id: 'sale_002',
+      saleDate: new Date('2026-02-09T14:15:00').toISOString(),
+      items: [
+        {
+          productionId: 'prod_002',
+          itemName: 'Gaufres au Citron',
+          quantity: 5,
+          unit: 'piece',
+          unitPrice: 2.30,
+          costPerUnit: 0.52
+        }
+      ],
+      revenue: 11.50,
+      cogs: 2.60,
+      margin: 8.90,
+      marginPercent: 77.4,
+      vendorId: 'vendor_marc',
+      vendorName: 'Marc Petit',
+      commission: 0.92, // 8% de 11.50
+      notes: 'Vente après-midi'
+    },
+    // Vente 3 : Mix Gaufres + Smoothies
+    {
+      id: 'sale_003',
+      saleDate: new Date('2026-02-10T11:00:00').toISOString(),
+      items: [
+        {
+          productionId: 'prod_001',
+          itemName: 'Gaufres au Chocolat',
+          quantity: 15,
+          unit: 'piece',
+          unitPrice: 2.50,
+          costPerUnit: 0.58
+        },
+        {
+          productionId: 'prod_003',
+          itemName: 'Smoothie Framboise Banane',
+          quantity: 5,
+          unit: 'portion',
+          unitPrice: 4.50,
+          costPerUnit: 1.85
+        }
+      ],
+      revenue: 60.00, // (15×2.50) + (5×4.50)
+      cogs: 17.95, // (15×0.58) + (5×1.85)
+      margin: 42.05,
+      marginPercent: 70.1,
+      vendorId: 'vendor_sophie',
+      vendorName: 'Sophie Durand',
+      commission: 3.00, // 5% de 60€
+      notes: 'Commande groupe - Événement'
+    },
+    // Vente 4 : Gaufres Citron
+    {
+      id: 'sale_004',
+      saleDate: new Date('2026-02-10T15:30:00').toISOString(),
+      items: [
+        {
+          productionId: 'prod_002',
+          itemName: 'Gaufres au Citron',
+          quantity: 12,
+          unit: 'piece',
+          unitPrice: 2.30,
+          costPerUnit: 0.52
+        }
+      ],
+      revenue: 27.60,
+      cogs: 6.24,
+      margin: 21.36,
+      marginPercent: 77.4,
+      vendorId: 'vendor_marc',
+      vendorName: 'Marc Petit',
+      commission: 2.21, // 8% de 27.60
+      notes: 'Vente classique'
+    },
+    // Vente 5 : Smoothies
+    {
+      id: 'sale_005',
+      saleDate: new Date('2026-02-10T16:45:00').toISOString(),
+      items: [
+        {
+          productionId: 'prod_003',
+          itemName: 'Smoothie Framboise Banane',
+          quantity: 3,
+          unit: 'portion',
+          unitPrice: 4.50,
+          costPerUnit: 1.85
+        }
+      ],
+      revenue: 13.50,
+      cogs: 5.55,
+      margin: 7.95,
+      marginPercent: 58.9,
+      vendorId: 'vendor_sophie',
+      vendorName: 'Sophie Durand',
+      commission: 0.68, // 5% de 13.50
+      notes: 'Fin de journée'
+    },
+    // Vente 6 : Gaufres Chocolat (dernière vente)
+    {
+      id: 'sale_006',
+      saleDate: new Date('2026-02-10T17:20:00').toISOString(),
+      items: [
+        {
+          productionId: 'prod_001',
+          itemName: 'Gaufres au Chocolat',
+          quantity: 10,
+          unit: 'piece',
+          unitPrice: 2.50,
+          costPerUnit: 0.58
+        },
+        {
+          productionId: 'prod_002',
+          itemName: 'Gaufres au Citron',
+          quantity: 5,
+          unit: 'piece',
+          unitPrice: 2.30,
+          costPerUnit: 0.52
+        }
+      ],
+      revenue: 36.50, // (10×2.50) + (5×2.30)
+      cogs: 8.40, // (10×0.58) + (5×0.52)
+      margin: 28.10,
+      marginPercent: 77.0,
+      vendorId: 'vendor_marc',
+      vendorName: 'Marc Petit',
+      commission: 2.92, // 8% de 36.50
+      notes: 'Dernière vente de la journée'
+    }
+  ],
   expenses: [],
   categories: ['Farines', 'Sucres', 'Matières grasses', 'Produits laitiers', 'Chocolats', 'Fruits', 'Épices', 'Arômes', 'Alcools', 'Boissons'],
   

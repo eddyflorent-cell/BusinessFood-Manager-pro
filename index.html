@@ -1086,29 +1086,29 @@
 
     <script type="module">
         // Import CORE services (v53.0 - Nouvelle démo réaliste)
-        import { IngredientService } from './src/core/services/IngredientService.js?v=55.1';
-        import { RecipeService } from './src/core/services/RecipeService.js?v=55.1';
-        import { SaleService } from './src/core/services/SaleService.js?v=55.1';
-        import { DashboardService } from './src/core/services/DashboardService.js?v=55.1';
-        import { ExpenseService } from './src/core/services/ExpenseService.js?v=55.1';
-        import { ProfitabilityService } from './src/core/services/ProfitabilityService.js?v=55.1';
-        import { PlatformCommissionService } from './src/core/services/PlatformCommissionService.js?v=55.1';
-        import { IngredientImporter } from './src/core/services/IngredientImporter.js?v=55.1';
-        import { PackService } from './src/core/services/PackService.js?v=55.1';
-        import { StorageManager } from './src/core/data/StorageManager.js?v=55.1';
-        import { IngredientDatabaseCore } from './src/core/data/IngredientDatabaseCore.js?v=55.1';
+        import { IngredientService } from './src/core/services/IngredientService.js?v=55.6';
+        import { RecipeService } from './src/core/services/RecipeService.js?v=55.6';
+        import { SaleService } from './src/core/services/SaleService.js?v=55.6';
+        import { DashboardService } from './src/core/services/DashboardService.js?v=55.6';
+        import { ExpenseService } from './src/core/services/ExpenseService.js?v=55.6';
+        import { ProfitabilityService } from './src/core/services/ProfitabilityService.js?v=55.6';
+        import { PlatformCommissionService } from './src/core/services/PlatformCommissionService.js?v=55.6';
+        import { IngredientImporter } from './src/core/services/IngredientImporter.js?v=55.6';
+        import { PackService } from './src/core/services/PackService.js?v=55.6';
+        import { StorageManager } from './src/core/data/StorageManager.js?v=55.6';
+        import { IngredientDatabaseCore } from './src/core/data/IngredientDatabaseCore.js?v=55.6';
         
         // Import CORE models
-        import { Ingredient } from './src/core/models/Ingredient.js?v=55.1';
-        import { Lot } from './src/core/models/Lot.js?v=55.1';
-        import { Recipe, RecipeIngredient } from './src/core/models/Recipe.js?v=55.1';
-        import { Production, UsedLot } from './src/core/models/Production.js?v=55.1';
-        import { Sale, SaleItem } from './src/core/models/Sale.js?v=55.1';
-        import { Expense } from './src/core/models/Expense.js?v=55.1';
-        import { Pack, PackItem } from './src/core/models/Pack.js?v=55.1';
+        import { Ingredient } from './src/core/models/Ingredient.js?v=55.6';
+        import { Lot } from './src/core/models/Lot.js?v=55.6';
+        import { Recipe, RecipeIngredient } from './src/core/models/Recipe.js?v=55.6';
+        import { Production, UsedLot } from './src/core/models/Production.js?v=55.6';
+        import { Sale, SaleItem } from './src/core/models/Sale.js?v=55.6';
+        import { Expense } from './src/core/models/Expense.js?v=55.6';
+        import { Pack, PackItem } from './src/core/models/Pack.js?v=55.6';
         
         // Import DEMO DATA
-        import { demoSalonModerne as demoWESalon } from './src/demo-we-salon.js?v=55.1';
+        import { demoSalonModerne as demoWESalon } from './src/demo-we-salon.js?v=55.6';
         
         // Make classes available globally for demo data conversion and loadData
         window.Ingredient = Ingredient;
@@ -1774,18 +1774,6 @@
                 </div>
 
                 <div class="stats-grid">
-                    <div class="stat-card primary">
-                        <div class="stat-header">
-                            <span class="stat-label" data-i18n="total_revenue">${t('total_revenue')}</span>
-                            <span class="stat-icon">💰</span>
-                        </div>
-                        <div class="stat-value">${formatCurrency(stats.sales.revenue)}</div>
-                        <div class="stat-change positive">
-                            <span>↗</span>
-                            <span>+12.5%</span>
-                        </div>
-                    </div>
-
                     <div class="stat-card success">
                         <div class="stat-header">
                             <span class="stat-label" data-i18n="total_margin">${t('total_margin')}</span>
@@ -1874,6 +1862,18 @@
                             })()}</p>
                         </div>
                         <div style="display: flex; gap: var(--space-sm);">
+                            <button class="btn" style="background: var(--purple, #9333ea); color: white;" onclick="showImportWizard()" title="Assistant d'import guidé">
+                                <span>🧙</span>
+                                <span>Assistant</span>
+                            </button>
+                            <button class="btn" style="background: var(--danger); color: white;" onclick="confirmDeleteAllIngredients()" title="Effacer tous les ingrédients">
+                                <span>🗑️</span>
+                                <span>Effacer Tout</span>
+                            </button>
+                            <button class="btn" style="background: var(--info); color: white;" onclick="downloadIngredientCSVTemplate()" title="Télécharger le modèle CSV vierge">
+                                <span>📄</span>
+                                <span>Modèle CSV</span>
+                            </button>
                             <button class="btn" style="background: var(--secondary); color: white;" onclick="showImportModal()">
                                 <span>📥</span>
                                 <span>Importer</span>
@@ -2344,10 +2344,22 @@
             
             const html = `
                 <div class="page-header">
-                    <h1 class="page-title">📋 Recettes</h1>
-                    <button class="btn btn-primary" onclick="showCreateRecipeModal()">
-                        ➕ Nouvelle Recette
-                    </button>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <h1 class="page-title">📋 Recettes</h1>
+                        <div style="display: flex; gap: var(--space-sm);">
+                            <button class="btn" style="background: var(--danger); color: white;" onclick="confirmDeleteAllRecipes()" title="Effacer toutes les recettes">
+                                <span>🗑️</span>
+                                <span>Effacer Tout</span>
+                            </button>
+                            <button class="btn" style="background: var(--info); color: white;" onclick="downloadRecipeCSVTemplate()" title="Télécharger le modèle CSV vierge">
+                                <span>📄</span>
+                                <span>Modèle CSV</span>
+                            </button>
+                            <button class="btn btn-primary" onclick="showCreateRecipeModal()">
+                                ➕ Nouvelle Recette
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="filters-bar">
@@ -2367,9 +2379,6 @@
                             <div class="empty-icon">📋</div>
                             <h3>Aucune recette</h3>
                             <p>Créez votre première recette</p>
-                            <button class="btn btn-primary" onclick="showCreateRecipeModal()">
-                                ➕ Nouvelle Recette
-                            </button>
                         </div>
                     ` : renderRecipeCards(recipes)}
                 </div>
@@ -2634,6 +2643,8 @@
 
         // Render recipe cards
         function renderRecipeCards(recipes) {
+            const settings = appState.data.settings || { overheadCoefficient: 1.0, showDirectCost: true };
+            
             return recipes.map(recipe => {
                 const capacity = RecipeService.calculateCapacity(recipe, appState.data.ingredients);
                 const cost = RecipeService.calculateCost(recipe, appState.data.ingredients);
@@ -2641,21 +2652,43 @@
                 
                 // Calcul marge si prix de vente défini
                 const sellingPrice = recipe.sellingPrice || 0;
-                const margin = sellingPrice > 0 ? ((sellingPrice - pricePerUnit) / sellingPrice * 100) : 0;
-                const marginClass = margin < 0 ? 'danger' : margin < 25 ? 'warning' : margin < 50 ? 'info' : 'success';
+                const marginAmount = sellingPrice - pricePerUnit;
+                const marginPercent = sellingPrice > 0 ? (marginAmount / sellingPrice * 100) : 0;
+                
+                // 🛡️ BADGES RENTABILITÉ (comme les packs)
+                let profitBadge = '';
+                let cardClass = 'ingredient-card';
+                
+                if (sellingPrice > 0) {
+                    if (marginAmount < 0) {
+                        // PERTE
+                        profitBadge = '<span style="background: var(--danger); color: white; padding: 4px 12px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; margin-left: 8px;">🔴 PERTE</span>';
+                        cardClass += ' loss-warning';
+                    } else if (marginPercent < 10) {
+                        // FAIBLE MARGE
+                        profitBadge = '<span style="background: var(--warning); color: white; padding: 4px 12px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; margin-left: 8px;">🟡 FAIBLE MARGE</span>';
+                    } else {
+                        // RENTABLE
+                        profitBadge = '<span style="background: var(--success); color: white; padding: 4px 12px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; margin-left: 8px;">🟢 RENTABLE</span>';
+                    }
+                }
                 
                 return `
-                    <div class="ingredient-card">
+                    <div class="${cardClass}">
                         <div class="ingredient-header">
                             <div>
-                                <h3 class="ingredient-name">${recipe.name}</h3>
+                                <h3 class="ingredient-name">${recipe.name}${profitBadge}</h3>
                                 <span class="ingredient-category">${recipe.category || 'Sans catégorie'}</span>
                             </div>
                             ${sellingPrice > 0 ? `
-                                <div class="alert-badge ${marginClass}">
-                                    ${margin >= 0 ? '📈' : '📉'} ${margin.toFixed(0)}%
+                                <div class="ingredient-stock ${marginPercent >= 25 ? 'success' : 'warning'}">
+                                    ${marginPercent.toFixed(0)}%
                                 </div>
-                            ` : ''}
+                            ` : `
+                                <div class="ingredient-stock" style="background: var(--gray);">
+                                    Pas de PV
+                                </div>
+                            `}
                         </div>
                         
                         <div class="ingredient-stats">
@@ -2674,9 +2707,9 @@
                         </div>
                         
                         ${sellingPrice > 0 ? `
-                            <div style="background: var(--light); padding: 8px 12px; border-radius: 6px; font-size: 13px; margin-top: 8px;">
+                            <div style="background: ${marginPercent < 10 ? '#fff3cd' : '#d4edda'}; padding: 8px 12px; border-radius: 6px; font-size: 13px; margin-top: 8px;">
                                 💰 PV: ${formatCurrency(sellingPrice)} | 
-                                Marge: ${formatCurrency(sellingPrice - pricePerUnit)}
+                                Marge: ${formatCurrency(marginAmount)} (${marginPercent.toFixed(1)}%)
                             </div>
                         ` : ''}
                         
@@ -3876,10 +3909,11 @@
         // Show new sale modal
         window.showNewSaleModal = function() {
             const productions = appState.data.productions?.filter(p => p.remainingQty > 0) || [];
+            const packs = appState.data.packs?.filter(p => p.active) || [];
             const vendors = appState.data.vendors || [];
             
-            if (productions.length === 0) {
-                showToast('❌ Aucun produit en stock. Créez d\'abord une production.', 'error');
+            if (productions.length === 0 && packs.length === 0) {
+                showToast('❌ Aucun produit disponible. Créez une production ou un pack.', 'error');
                 return;
             }
             
@@ -3894,18 +3928,50 @@
                     </div>
                     <div class="modal-body">
                         <form id="newSaleForm">
-                            <!-- Production selection -->
+                            <!-- Product selection (Packs + Productions) -->
                             <div class="form-group">
                                 <label>Produit *</label>
                                 <select id="saleProductSelect" required>
                                     <option value="">Sélectionner un produit...</option>
-                                    ${productions.map(p => `
-                                        <option value="${p.id}" data-recipe-id="${p.recipeId}" data-recipe-name="${p.recipeName}" 
-                                                data-unit="${p.producedUnit}" data-cost-per-unit="${p.costPerUnit}" 
-                                                data-remaining="${p.remainingQty}">
-                                            ${p.recipeName} (${p.remainingQty} ${p.producedUnit} dispo)
-                                        </option>
-                                    `).join('')}
+                                    ${packs.length > 0 ? `
+                                        <optgroup label="🎁 Packs">
+                                            ${packs.map(pack => {
+                                                const recipes = appState.data.recipes || [];
+                                                const ingredients = appState.data.ingredients || [];
+                                                const settings = appState.data.settings || { overheadCoefficient: 1.0 };
+                                                const costResult = pack.getCost(recipes, ingredients, settings);
+                                                const cost = typeof costResult === 'object' ? costResult.total : costResult;
+                                                const hasStock = pack.hasStock(productions, 1);
+                                                return `
+                                                    <option value="pack_${pack.id}" 
+                                                            data-type="pack"
+                                                            data-name="${pack.name}" 
+                                                            data-unit="pack" 
+                                                            data-cost-per-unit="${cost}" 
+                                                            data-price="${pack.price}"
+                                                            data-remaining="999"
+                                                            ${!hasStock ? 'disabled' : ''}>
+                                                        ${pack.name} - ${formatCurrency(pack.price)} ${!hasStock ? '(Rupture stock)' : ''}
+                                                    </option>
+                                                `;
+                                            }).join('')}
+                                        </optgroup>
+                                    ` : ''}
+                                    ${productions.length > 0 ? `
+                                        <optgroup label="⚙️ Productions">
+                                            ${productions.map(p => `
+                                                <option value="prod_${p.id}" 
+                                                        data-type="production"
+                                                        data-recipe-id="${p.recipeId}" 
+                                                        data-name="${p.recipeName}" 
+                                                        data-unit="${p.producedUnit}" 
+                                                        data-cost-per-unit="${p.costPerUnit}" 
+                                                        data-remaining="${p.remainingQty}">
+                                                    ${p.recipeName} (${p.remainingQty} ${p.producedUnit} dispo)
+                                                </option>
+                                            `).join('')}
+                                        </optgroup>
+                                    ` : ''}
                                 </select>
                             </div>
                             
@@ -3981,7 +4047,8 @@
         window.updateSalePreview = function() {
             const productSelect = document.getElementById('saleProductSelect');
             const quantity = Number(document.getElementById('saleQuantity').value) || 0;
-            const unitPrice = Number(document.getElementById('saleUnitPrice').value) || 0;
+            const unitPriceInput = document.getElementById('saleUnitPrice');
+            const unitPrice = Number(unitPriceInput.value) || 0;
             const vendorSelect = document.getElementById('saleVendorSelect');
             const preview = document.getElementById('salePreview');
             const sellButton = document.getElementById('sellButton');
@@ -3999,20 +4066,34 @@
                 return;
             }
             
-            const recipeName = selectedOption.getAttribute('data-recipe-name');
+            const productType = selectedOption.getAttribute('data-type') || 'production';
+            const productName = selectedOption.getAttribute('data-name') || selectedOption.getAttribute('data-recipe-name');
             const unit = selectedOption.getAttribute('data-unit');
             const costPerUnit = Number(selectedOption.getAttribute('data-cost-per-unit'));
             const remaining = Number(selectedOption.getAttribute('data-remaining'));
             
+            // Pour les packs, pré-remplir le prix si vide
+            if (productType === 'pack' && !unitPriceInput.value) {
+                const packPrice = Number(selectedOption.getAttribute('data-price'));
+                if (packPrice > 0) {
+                    unitPriceInput.value = packPrice;
+                }
+            }
+            
             // Update stock available message
-            document.getElementById('stockAvailable').textContent = `Stock disponible: ${remaining} ${unit}`;
+            if (productType === 'pack') {
+                document.getElementById('stockAvailable').textContent = `Pack disponible en stock`;
+            } else {
+                document.getElementById('stockAvailable').textContent = `Stock disponible: ${remaining} ${unit}`;
+            }
             
             // Suggested price (cost + 50% margin)
             const suggestedPrice = Math.round(costPerUnit * 1.5);
             document.getElementById('suggestedPrice').textContent = `Prix suggéré (marge 50%): ${formatCurrency(suggestedPrice)}`;
             
             // Calculate totals
-            const revenue = quantity * unitPrice;
+            const unitPriceValue = Number(unitPriceInput.value) || 0;
+            const revenue = quantity * unitPriceValue;
             const cogs = quantity * costPerUnit;
             const margin = revenue - cogs;
             const marginPercent = revenue > 0 ? (margin / revenue) * 100 : 0;
@@ -4028,21 +4109,9 @@
                 vendorName = vendorOption.getAttribute('data-name');
             }
             
-            // Check stock
-            const canSell = quantity > 0 && quantity <= remaining && unitPrice > 0;
-            
-            // Debug log
-            console.log('Validation vente:', {
-                quantity,
-                remaining,
-                unitPrice,
-                canSell,
-                checks: {
-                    hasQuantity: quantity > 0,
-                    stockOK: quantity <= remaining,
-                    hasPrice: unitPrice > 0
-                }
-            });
+            // Check stock (packs always available, productions check remaining)
+            const canSell = quantity > 0 && unitPriceValue > 0 && 
+                           (productType === 'pack' || quantity <= remaining);
             
             // Display preview
             preview.innerHTML = `
@@ -4051,7 +4120,7 @@
                     <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-md);">
                         <div>
                             <strong>Produit :</strong><br>
-                            ${recipeName}
+                            ${productName}
                         </div>
                         <div>
                             <strong>Quantité :</strong><br>
@@ -4426,7 +4495,6 @@
                             <div class="empty-icon">🎁</div>
                             <h3>Aucun pack</h3>
                             <p>Créez des packs de produits pour vendre plusieurs articles ensemble</p>
-                            <button class="btn btn-primary" onclick="showNewPackModal()">➕ Créer Pack</button>
                         </div>
                     ` : `
                         <div class="stats-grid" style="margin-bottom: var(--space-lg);">
@@ -5260,6 +5328,9 @@
         // Add ingredient row to recipe
         window.addRecipeIngredient = function() {
             const ingredients = appState.data.ingredients || [];
+            // Trier alphabétiquement
+            const sortedIngredients = [...ingredients].sort((a, b) => a.name.localeCompare(b.name));
+            
             const container = document.getElementById('recipeIngredientsList');
             const index = container.children.length;
             
@@ -5269,9 +5340,18 @@
             row.dataset.index = index;
             row.innerHTML = `
                 <div class="form-group" style="flex: 2;">
-                    <select name="ingredient_${index}" required onchange="updateRecipeIngredientUnit(${index})">
+                    <input type="text" 
+                           id="ingredientSearch_${index}" 
+                           placeholder="🔍 Rechercher un ingrédient..." 
+                           style="width: 100%; padding: 12px; border: 2px solid var(--light); border-radius: var(--radius-md); margin-bottom: 8px;"
+                           oninput="filterIngredientSelect(${index})">
+                    <select name="ingredient_${index}" 
+                            id="ingredientSelect_${index}" 
+                            required 
+                            onchange="updateRecipeIngredientUnit(${index})"
+                            style="width: 100%;">
                         <option value="">Sélectionner ingrédient...</option>
-                        ${ingredients.map(ing => `<option value="${ing.id}" data-unit="${ing.baseUnit}">${ing.name}</option>`).join('')}
+                        ${sortedIngredients.map(ing => `<option value="${ing.id}" data-unit="${ing.baseUnit}">${ing.name}</option>`).join('')}
                     </select>
                 </div>
                 <div class="form-group">
@@ -5288,6 +5368,22 @@
             `;
             
             container.appendChild(row);
+        };
+        
+        // Fonction de filtrage du select ingrédients
+        window.filterIngredientSelect = function(index) {
+            const searchInput = document.getElementById(`ingredientSearch_${index}`);
+            const select = document.getElementById(`ingredientSelect_${index}`);
+            const searchTerm = searchInput.value.toLowerCase();
+            
+            Array.from(select.options).forEach(option => {
+                if (option.value === '') {
+                    option.style.display = ''; // Toujours montrer l'option vide
+                } else {
+                    const text = option.textContent.toLowerCase();
+                    option.style.display = text.includes(searchTerm) ? '' : 'none';
+                }
+            });
         };
         
         // Update unit options when ingredient selected
@@ -6030,7 +6126,9 @@
             }
         });
         
-        // Close modal on overlay click
+        // Close modal on overlay click - DÉSACTIVÉ pour éviter pertes de données
+        // Les modales se ferment uniquement via les boutons Annuler ou X
+        /*
         document.addEventListener('click', (e) => {
             if (e.target.classList.contains('modal')) {
                 const modalId = e.target.id;
@@ -6039,6 +6137,7 @@
                 }
             }
         });
+        */
 
         // ========================================
         // IMPORT / EXPORT INGRÉDIENTS
@@ -7689,6 +7788,477 @@
             renderDashboard();
             updateAlertsBadge();
         }
+        
+        // ========================================
+        // FONCTIONS UTILITAIRES v55.3
+        // ========================================
+        
+        /**
+         * Confirmation avant effacement de tous les ingrédients
+         */
+        window.confirmDeleteAllIngredients = function() {
+            const count = (appState.data.ingredients || []).length;
+            if (count === 0) {
+                showToast('ℹ️ Aucun ingrédient à effacer', 'info');
+                return;
+            }
+            
+            const confirmed = confirm(
+                `⚠️ ATTENTION !\n\n` +
+                `Vous êtes sur le point de supprimer ${count} ingrédient${count > 1 ? 's' : ''}.\n\n` +
+                `Cette action est IRRÉVERSIBLE.\n\n` +
+                `Voulez-vous vraiment continuer ?`
+            );
+            
+            if (confirmed) {
+                appState.data.ingredients = [];
+                StorageManager.save(appState.data);
+                renderIngredientsPage();
+                showToast(`✅ ${count} ingrédient${count > 1 ? 's' : ''} supprimé${count > 1 ? 's' : ''}`, 'success');
+            }
+        };
+        
+        /**
+         * Télécharger le modèle CSV vierge pour les ingrédients
+         */
+        window.downloadIngredientCSVTemplate = function() {
+            // Version simplifiée avec seulement les champs essentiels
+            const csvContent = [
+                // En-têtes (6 colonnes seulement)
+                'Nom,Catégorie,Unité,Quantité,Prix (EUR),Fournisseur',
+                // Exemples simples
+                'Farine T45,Farines,kg,25,37.50,Metro',
+                'Beurre doux,Matières grasses,kg,5,40.00,Metro',
+                'Sucre blanc,Sucres,kg,10,12.00,Metro',
+                'Œufs frais,Produits laitiers,pièce,180,0.25,Ferme locale',
+                'Lait entier,Produits laitiers,L,20,1.50,Lactalis',
+                '',
+                '# Instructions:',
+                '# - Nom: Nom de l\'ingrédient',
+                '# - Catégorie: Farines, Sucres, Matières grasses, Produits laitiers, etc.',
+                '# - Unité: kg, g, L, ml, pièce',
+                '# - Quantité: Quantité du lot',
+                '# - Prix (EUR): Prix total du lot en euros',
+                '# - Fournisseur: Nom du fournisseur (optionnel)'
+            ].join('\n');
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'BFM_Modele_Simple_Ingredients.csv';
+            link.click();
+            
+            showToast('📄 Modèle CSV simplifié téléchargé', 'success');
+        };
+        
+        /**
+         * Télécharger le modèle CSV vierge pour les recettes
+         */
+        window.downloadRecipeCSVTemplate = function() {
+            const csvContent = [
+                'Nom recette,Catégorie,Rendement,Unité,Temps préparation (min),Instructions,Ingrédients (ID:Quantité:Unité séparés par |)',
+                'Croissant au beurre,Viennoiserie,10,pièce,120,Détrempe puis tourage 3 fois,ing_farine_t45:500:g|ing_beurre:250:g|ing_sucre:50:g',
+                'Pain au chocolat,Viennoiserie,8,pièce,130,Détrempe puis tourage avec chocolat,ing_farine_t45:500:g|ing_beurre:200:g|ing_chocolat:100:g'
+            ].join('\n');
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'BFM_Modele_Recettes.csv';
+            link.click();
+            
+            showToast('📄 Modèle CSV téléchargé', 'success');
+        };
+        
+        /**
+         * Assistant d'import guidé (wizard)
+         */
+        window.showImportWizard = function() {
+            // State de l'assistant (GLOBAL pour être accessible partout)
+            window.wizardState = {
+                step: 1,
+                ingredients: [],
+                currentIngredient: {}
+            };
+            
+            // Définir les fonctions internes D'ABORD
+            window.renderWizardStep = function(state) {
+                const body = document.getElementById('wizardBody');
+                
+                if (state.step === 1) {
+                    // Étape 1 : Choix du mode
+                    body.innerHTML = `
+                        <div style="text-align: center; padding: var(--space-xl);">
+                            <div style="font-size: 64px; margin-bottom: var(--space-lg);">🧙‍♂️</div>
+                            <h2 style="margin-bottom: var(--space-md);">Bienvenue dans l'Assistant d'Import</h2>
+                            <p style="color: var(--gray); font-size: 16px; margin-bottom: var(--space-xl); max-width: 500px; margin-left: auto; margin-right: auto;">
+                                Choisissez votre mode d'import selon votre situation
+                            </p>
+                            
+                            <!-- Choix du mode -->
+                            <div style="display: grid; gap: var(--space-lg); max-width: 700px; margin: 0 auto var(--space-xl);">
+                                <!-- Mode Rapide -->
+                                <div onclick="selectWizardMode('quick')" style="cursor: pointer; padding: var(--space-lg); border: 3px solid var(--light); border-radius: var(--radius-lg); text-align: left; transition: all 0.3s; background: white;">
+                                    <div style="display: flex; align-items: start; gap: var(--space-md);">
+                                        <div style="font-size: 48px;">⚡</div>
+                                        <div style="flex: 1;">
+                                            <h3 style="margin: 0 0 var(--space-sm) 0; color: var(--primary);">Mode Rapide</h3>
+                                            <p style="margin: 0 0 var(--space-sm) 0; color: var(--gray); font-size: 14px;">
+                                                Pour tester ou importer rapidement
+                                            </p>
+                                            <div style="display: flex; gap: var(--space-md); font-size: 13px; color: var(--gray);">
+                                                <span>📝 5 champs</span>
+                                                <span>⏱️ 30 sec/produit</span>
+                                            </div>
+                                            <div style="margin-top: var(--space-sm); padding: var(--space-sm); background: #fff9e6; border-radius: var(--radius-sm); font-size: 13px;">
+                                                ⚠️ Frais et DLC = valeurs par défaut
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Mode Facture (RECOMMANDÉ) -->
+                                <div onclick="selectWizardMode('invoice')" style="cursor: pointer; padding: var(--space-lg); border: 3px solid var(--success); border-radius: var(--radius-lg); text-align: left; transition: all 0.3s; background: linear-gradient(135deg, #f0fff4 0%, #ffffff 100%); position: relative;">
+                                    <div style="position: absolute; top: -12px; right: 16px; background: var(--success); color: white; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 600;">
+                                        RECOMMANDÉ
+                                    </div>
+                                    <div style="display: flex; align-items: start; gap: var(--space-md);">
+                                        <div style="font-size: 48px;">📄</div>
+                                        <div style="flex: 1;">
+                                            <h3 style="margin: 0 0 var(--space-sm) 0; color: var(--success);">Mode Facture</h3>
+                                            <p style="margin: 0 0 var(--space-sm) 0; color: var(--gray); font-size: 14px;">
+                                                Avec votre facture fournisseur sous les yeux
+                                            </p>
+                                            <div style="display: flex; gap: var(--space-md); font-size: 13px; color: var(--gray);">
+                                                <span>📝 8 champs</span>
+                                                <span>⏱️ 1 min/produit</span>
+                                            </div>
+                                            <div style="margin-top: var(--space-sm); padding: var(--space-sm); background: #e6f7ed; border-radius: var(--radius-sm); font-size: 13px;">
+                                                ✅ Données complètes (frais, DLC réels)
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <button class="btn" style="background: var(--gray); color: white;" onclick="closeModal('importWizard')">
+                                Annuler
+                            </button>
+                        </div>
+                    `;
+                } else if (state.step === 2) {
+                    // Étape 2 : Ajout d'ingrédients (adapté selon le mode)
+                    const isInvoiceMode = state.mode === 'invoice';
+                    const modeLabel = isInvoiceMode ? '📄 Mode Facture' : '⚡ Mode Rapide';
+                    const modeHint = isInvoiceMode ? 'Gardez votre facture sous les yeux' : 'Import rapide avec valeurs par défaut';
+                    
+                    body.innerHTML = `
+                        <div style="padding: var(--space-md);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-md);">
+                                <div>
+                                    <h3>📦 Ajout d'ingrédients</h3>
+                                    <p style="font-size: 13px; color: var(--gray); margin: 4px 0 0 0;">${modeLabel} • ${modeHint}</p>
+                                </div>
+                                <span style="color: var(--gray);">${state.ingredients.length} ingrédient${state.ingredients.length > 1 ? 's' : ''} ajouté${state.ingredients.length > 1 ? 's' : ''}</span>
+                            </div>
+                            
+                            <!-- Formulaire adaptatif -->
+                            <form id="wizardIngredientForm" style="background: var(--light); padding: var(--space-lg); border-radius: var(--radius-lg); margin-bottom: var(--space-lg);">
+                                <!-- Ligne 1 : Nom + Catégorie -->
+                                <div class="form-row">
+                                    <div class="form-group" style="flex: 2;">
+                                        <label>Nom de l'ingrédient *</label>
+                                        <input type="text" name="name" required placeholder="Ex: Farine T45">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Catégorie *</label>
+                                        <select name="category" required>
+                                            <option value="">Choisir...</option>
+                                            <option value="Farines">Farines</option>
+                                            <option value="Sucres">Sucres</option>
+                                            <option value="Matières grasses">Matières grasses</option>
+                                            <option value="Produits laitiers">Produits laitiers</option>
+                                            <option value="Œufs">Œufs</option>
+                                            <option value="Levures">Levures</option>
+                                            <option value="Chocolats">Chocolats</option>
+                                            <option value="Fruits">Fruits</option>
+                                            <option value="Épices">Épices</option>
+                                            <option value="Autre">Autre</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <!-- Ligne 2 : Quantité + Unité + Prix -->
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Quantité *</label>
+                                        <input type="number" name="quantity" required min="0.01" step="0.01" placeholder="25">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Unité *</label>
+                                        <select name="unit" required>
+                                            <option value="">Choisir...</option>
+                                            <option value="kg">kg</option>
+                                            <option value="g">g</option>
+                                            <option value="L">L</option>
+                                            <option value="ml">ml</option>
+                                            <option value="piece">pièce</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Prix HT (€) *</label>
+                                        <input type="number" name="price" required min="0" step="0.01" placeholder="37.50">
+                                    </div>
+                                </div>
+                                
+                                ${isInvoiceMode ? `
+                                    <!-- Mode Facture : Champs supplémentaires -->
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label>Frais approche (€) *</label>
+                                            <input type="number" name="approachCost" required min="0" step="0.01" placeholder="2.50" value="0">
+                                            <small style="color: var(--gray); font-size: 12px;">Transport, livraison (sur facture)</small>
+                                        </div>
+                                        <div class="form-group" style="flex: 2;">
+                                            <label>DLC *</label>
+                                            <input type="date" name="dlc" required>
+                                            <small style="color: var(--gray); font-size: 12px;">Date sur l'étiquette produit</small>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label>Date réception</label>
+                                            <input type="date" name="receptionDate" value="${new Date().toISOString().split('T')[0]}">
+                                        </div>
+                                        <div class="form-group" style="flex: 2;">
+                                            <label>Fournisseur</label>
+                                            <input type="text" name="supplier" placeholder="Metro, Carrefour...">
+                                        </div>
+                                    </div>
+                                ` : `
+                                    <!-- Mode Rapide : Seul Fournisseur -->
+                                    <div class="form-group">
+                                        <label>Fournisseur (optionnel)</label>
+                                        <input type="text" name="supplier" placeholder="Metro, Carrefour, Leclerc...">
+                                    </div>
+                                `}
+                                
+                                <div style="display: flex; gap: var(--space-md); margin-top: var(--space-md);">
+                                    <button type="submit" class="btn btn-primary" style="flex: 1;">
+                                        ➕ Ajouter cet ingrédient
+                                    </button>
+                                </div>
+                            </form>
+                            
+                            <!-- Liste des ingrédients ajoutés -->
+                            ${state.ingredients.length > 0 ? `
+                                <div style="background: white; border-radius: var(--radius-lg); padding: var(--space-md); margin-bottom: var(--space-lg);">
+                                    <h4 style="margin-bottom: var(--space-md);">📋 Ingrédients ajoutés</h4>
+                                    <div style="display: flex; flex-direction: column; gap: var(--space-sm);">
+                                        ${state.ingredients.map((ing, idx) => `
+                                            <div style="display: flex; justify-content: space-between; align-items: center; padding: var(--space-sm); background: var(--light); border-radius: var(--radius-md);">
+                                                <div>
+                                                    <strong>${ing.name}</strong>
+                                                    <span style="color: var(--gray); font-size: 14px; margin-left: var(--space-sm);">
+                                                        ${ing.category} • ${ing.quantity} ${ing.unit} • ${ing.price}€
+                                                    </span>
+                                                </div>
+                                                <button class="btn" style="background: var(--danger); color: white; padding: 6px 12px;" onclick="removeWizardIngredient(${idx})">
+                                                    ✕
+                                                </button>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            ` : `
+                                <div style="text-align: center; padding: var(--space-xl); color: var(--gray);">
+                                    <div style="font-size: 48px; margin-bottom: var(--space-md);">📦</div>
+                                    <p>Aucun ingrédient ajouté pour le moment</p>
+                                </div>
+                            `}
+                            
+                            <!-- Boutons de navigation -->
+                            <div style="display: flex; gap: var(--space-md); margin-top: var(--space-lg);">
+                                <button class="btn" style="flex: 1; background: var(--gray); color: white;" onclick="previousWizardStep()">
+                                    ← Retour
+                                </button>
+                                <button class="btn btn-primary" style="flex: 1;" onclick="finishWizard()" ${state.ingredients.length === 0 ? 'disabled' : ''}>
+                                    ✅ Terminer (${state.ingredients.length})
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Event listener pour le formulaire
+                    document.getElementById('wizardIngredientForm').addEventListener('submit', (e) => {
+                        e.preventDefault();
+                        const formData = new FormData(e.target);
+                        const ingredient = {
+                            name: formData.get('name'),
+                            category: formData.get('category'),
+                            quantity: parseFloat(formData.get('quantity')),
+                            unit: formData.get('unit'),
+                            price: parseFloat(formData.get('price')),
+                            supplier: formData.get('supplier') || ''
+                        };
+                        
+                        // Champs supplémentaires du mode facture
+                        if (state.mode === 'invoice') {
+                            ingredient.approachCost = parseFloat(formData.get('approachCost')) || 0;
+                            ingredient.dlc = formData.get('dlc');
+                            ingredient.receptionDate = formData.get('receptionDate') || new Date().toISOString().split('T')[0];
+                        }
+                        
+                        state.ingredients.push(ingredient);
+                        e.target.reset();
+                        
+                        // Réinitialiser la date de réception à aujourd'hui
+                        if (state.mode === 'invoice') {
+                            const receptionInput = e.target.querySelector('[name="receptionDate"]');
+                            if (receptionInput) {
+                                receptionInput.value = new Date().toISOString().split('T')[0];
+                            }
+                        }
+                        
+                        renderWizardStep(state);
+                        showToast(`✅ ${ingredient.name} ajouté !`, 'success');
+                    });
+                }
+            };
+            
+            window.selectWizardMode = function(mode) {
+                window.wizardState.mode = mode;
+                window.wizardState.step = 2;
+                renderWizardStep(window.wizardState);
+            };
+            
+            window.nextWizardStep = function() {
+                window.wizardState.step++;
+                renderWizardStep(window.wizardState);
+            };
+            
+            window.previousWizardStep = function() {
+                window.wizardState.step--;
+                renderWizardStep(window.wizardState);
+            };
+            
+            window.removeWizardIngredient = function(index) {
+                window.wizardState.ingredients.splice(index, 1);
+                renderWizardStep(window.wizardState);
+                showToast('🗑️ Ingrédient retiré', 'info');
+            };
+            
+            window.finishWizard = function() {
+                if (window.wizardState.ingredients.length === 0) {
+                    showToast('❌ Ajoutez au moins un ingrédient', 'error');
+                    return;
+                }
+                
+                // Convertir en format BFM avec les BONS noms de propriétés
+                const ingredients = window.wizardState.ingredients.map(ing => {
+                    // Convertir unité en baseUnit
+                    let baseUnit, quantityInBaseUnit;
+                    if (ing.unit === 'kg') {
+                        baseUnit = 'g';
+                        quantityInBaseUnit = ing.quantity * 1000;
+                    } else if (ing.unit === 'L') {
+                        baseUnit = 'ml';
+                        quantityInBaseUnit = ing.quantity * 1000;
+                    } else {
+                        baseUnit = ing.unit;
+                        quantityInBaseUnit = ing.quantity;
+                    }
+                    
+                    // Créer le lot avec les BONS noms (selon Lot.js)
+                    // Utiliser vraies valeurs si mode facture, sinon valeurs par défaut
+                    const dlcDate = ing.dlc ? new Date(ing.dlc) : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
+                    const receptionDate = ing.receptionDate ? new Date(ing.receptionDate) : new Date();
+                    const approachCost = ing.approachCost !== undefined ? ing.approachCost : 0;
+                    
+                    const lot = new Lot({
+                        id: 'lot_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+                        quantiteInitiale: quantityInBaseUnit,  // ✅ Nom correct
+                        quantite: quantityInBaseUnit,           // ✅ Nom correct
+                        prixTotal: ing.price,                   // ✅ Nom correct
+                        fraisApproche: approachCost,            // ✅ Vraie valeur ou 0
+                        dlc: dlcDate,                           // ✅ Vraie DLC ou +1 an
+                        dateReception: receptionDate,           // ✅ Vraie date ou aujourd'hui
+                        fournisseur: ing.supplier || '',        // ✅ Nom correct
+                        numeroLot: `WIZARD-${Date.now()}`,      // ✅ Nom correct
+                        receivedBy: ''                          // ✅ Optionnel
+                    });
+                    
+                    // Créer l'ingrédient avec les BONS noms (selon Ingredient.js)
+                    return new Ingredient({
+                        id: 'ing_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+                        name: ing.name,
+                        category: ing.category,
+                        baseUnit: baseUnit,                     // ✅ g, ml, ou piece
+                        displayUnit: ing.unit,                  // ✅ kg, L, ou piece
+                        yieldPercent: 100,                      // ✅ Pas de perte par défaut
+                        wasteType: '',                          // ✅ Pas de déchet
+                        alertBaseQty: baseUnit === 'g' ? 1000 : (baseUnit === 'ml' ? 1000 : 5),
+                        lots: [lot]
+                    });
+                });
+                
+                // Ajouter à la base
+                appState.data.ingredients = appState.data.ingredients || [];
+                appState.data.ingredients.push(...ingredients);
+                StorageManager.save(appState.data);
+                
+                closeModal('importWizard');
+                renderIngredientsPage();
+                showToast(`✅ ${ingredients.length} ingrédient${ingredients.length > 1 ? 's' : ''} importé${ingredients.length > 1 ? 's' : ''} !`, 'success');
+            };
+            
+            // Créer le modal APRÈS avoir défini toutes les fonctions
+            const modal = document.createElement('div');
+            modal.id = 'importWizard';
+            modal.className = 'modal';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
+                    <div class="modal-header">
+                        <h2>🧙 Assistant d'Import</h2>
+                        <button class="modal-close" onclick="closeModal('importWizard')">✕</button>
+                    </div>
+                    <div class="modal-body" id="wizardBody">
+                        <!-- Contenu dynamique -->
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Maintenant on peut appeler renderWizardStep
+            renderWizardStep(window.wizardState);
+        };
+        
+        /**
+         * Confirmation avant effacement de toutes les recettes
+         */
+        window.confirmDeleteAllRecipes = function() {
+            const count = (appState.data.recipes || []).length;
+            if (count === 0) {
+                showToast('ℹ️ Aucune recette à effacer', 'info');
+                return;
+            }
+            
+            const confirmed = confirm(
+                `⚠️ ATTENTION !\n\n` +
+                `Vous êtes sur le point de supprimer ${count} recette${count > 1 ? 's' : ''}.\n\n` +
+                `Cette action est IRRÉVERSIBLE.\n\n` +
+                `Voulez-vous vraiment continuer ?`
+            );
+            
+            if (confirmed) {
+                appState.data.recipes = [];
+                StorageManager.save(appState.data);
+                renderRecipesPage();
+                showToast(`✅ ${count} recette${count > 1 ? 's' : ''} supprimée${count > 1 ? 's' : ''}`, 'success');
+            }
+        };
 
         // Start app
         initApp();
