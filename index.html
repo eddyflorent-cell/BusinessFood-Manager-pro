@@ -1053,8 +1053,11 @@
 
             <div class="header-right">
                 <!-- Demo Mode Button -->
-                <button class="btn" style="background: var(--warning); color: var(--dark); font-weight: 700;" onclick="loadDemoData()">
-                    🎭 Mode Démo
+                <button class="btn" style="background: var(--warning); color: var(--dark); font-weight: 700;" onclick="loadDemoWE()">
+                    🎭 Démo Salon
+                </button>
+                <button class="btn" style="background: var(--primary); color: white; font-weight: 700;" onclick="loadDemoBar()">
+                    🍹 Démo Bar
                 </button>
                 
                 <!-- Language Switcher -->
@@ -1096,7 +1099,7 @@
         import { IngredientImporter } from './src/core/services/IngredientImporter.js?v=55.6';
         import { PackService } from './src/core/services/PackService.js?v=55.6';
         import { StorageManager } from './src/core/data/StorageManager.js?v=55.6';
-        import { IngredientDatabaseCore } from './src/core/data/IngredientDatabaseCore.js?v=55.6';
+
         
         // Import CORE models
         import { Ingredient } from './src/core/models/Ingredient.js?v=55.6';
@@ -1109,6 +1112,10 @@
         
         // Import DEMO DATA
         import { demoSalonModerne as demoWESalon } from './src/demo-we-salon.js?v=55.6';
+        import { demoBarLounge } from './src/demo-bar-lounge.js?v=55.6';
+        // Exposer les recettes démo pour récupération sellingPrice dans loadData
+        window.demoWESalonRecipes = demoWESalon.recipes || [];
+        window.demoBarLoungeRecipes = demoBarLounge.recipes || [];
         
         // Make classes available globally for demo data conversion and loadData
         window.Ingredient = Ingredient;
@@ -1123,283 +1130,6 @@
         window.Pack = Pack;
         window.PackItem = PackItem;
         
-        // ========================================
-        // DEMO DATA (inline)
-        // ========================================
-        
-        const demoData = {
-            categories: [
-                { id: 'cat_1', name: 'Céréales & Farines', parent: null },
-                { id: 'cat_1_1', name: 'Blé', parent: 'Céréales & Farines' },
-                { id: 'cat_1_2', name: 'Maïs', parent: 'Céréales & Farines' },
-                { id: 'cat_2', name: 'Sucres & Édulcorants', parent: null },
-                { id: 'cat_2_1', name: 'Sucres blancs', parent: 'Sucres & Édulcorants' },
-                { id: 'cat_2_2', name: 'Sucres bruns', parent: 'Sucres & Édulcorants' },
-                { id: 'cat_3', name: 'Matières grasses', parent: null },
-                { id: 'cat_3_1', name: 'Beurres', parent: 'Matières grasses' },
-                { id: 'cat_3_2', name: 'Huiles', parent: 'Matières grasses' },
-                { id: 'cat_4', name: 'Produits laitiers', parent: null },
-                { id: 'cat_4_1', name: 'Lait', parent: 'Produits laitiers' },
-                { id: 'cat_4_2', name: 'Œufs', parent: 'Produits laitiers' },
-                { id: 'cat_5', name: 'Additifs & Levures', parent: null },
-                { id: 'cat_5_1', name: 'Levures', parent: 'Additifs & Levures' },
-                { id: 'cat_5_2', name: 'Sel', parent: 'Additifs & Levures' },
-                { id: 'cat_6', name: 'Chocolats & Cacao', parent: null },
-                { id: 'cat_6_1', name: 'Cacao poudre', parent: 'Chocolats & Cacao' }
-            ],
-            
-            ingredients: [
-                {
-                    id: 'ing_1',
-                    name: 'Farine de blé T55',
-                    category: 'Blé',
-                    baseUnit: 'g',
-                    displayUnit: 'kg',
-                    alertBaseQty: 5000,
-                    baseQtyRemaining: 23000,
-                    stockValue: 69000,
-                    lots: [{
-                        id: 'lot_1_1',
-                        quantiteInitiale: 25000,
-                        quantite: 23000,
-                        prixTotal: 75000,
-                        fraisApproche: 3000,
-                        dlc: new Date('2026-07-15').toISOString(),
-                        dateReception: new Date('2026-01-10').toISOString(),
-                        fournisseur: 'Minoterie du Cameroun',
-                        numeroLot: 'MCF-2026-001',
-                        epuise: false
-                    }],
-                    alerts: [],
-                    createdAt: new Date('2026-01-10').toISOString(),
-                    updatedAt: new Date('2026-01-17').toISOString()
-                },
-                {
-                    id: 'ing_2',
-                    name: 'Farine de blé T65',
-                    category: 'Blé',
-                    baseUnit: 'g',
-                    displayUnit: 'kg',
-                    alertBaseQty: 3000,
-                    baseQtyRemaining: 8500,
-                    stockValue: 30600,
-                    lots: [{
-                        id: 'lot_2_1',
-                        quantiteInitiale: 10000,
-                        quantite: 8500,
-                        prixTotal: 32000,
-                        fraisApproche: 2000,
-                        dlc: new Date('2026-07-20').toISOString(),
-                        dateReception: new Date('2026-01-12').toISOString(),
-                        fournisseur: 'Minoterie du Cameroun',
-                        numeroLot: 'MCF-2026-002',
-                        epuise: false
-                    }],
-                    alerts: [],
-                    createdAt: new Date('2026-01-12').toISOString(),
-                    updatedAt: new Date('2026-01-17').toISOString()
-                },
-                {
-                    id: 'ing_3',
-                    name: 'Sucre cristallisé',
-                    category: 'Sucres blancs',
-                    baseUnit: 'g',
-                    displayUnit: 'kg',
-                    alertBaseQty: 5000,
-                    baseQtyRemaining: 18300,
-                    stockValue: 13176,
-                    lots: [{
-                        id: 'lot_3_1',
-                        quantiteInitiale: 25000,
-                        quantite: 18300,
-                        prixTotal: 18000,
-                        fraisApproche: 0,
-                        dlc: new Date('2028-01-15').toISOString(),
-                        dateReception: new Date('2026-01-05').toISOString(),
-                        fournisseur: 'SOSUCAM',
-                        numeroLot: 'SSC-2026-A12',
-                        epuise: false
-                    }],
-                    alerts: [],
-                    createdAt: new Date('2026-01-05').toISOString(),
-                    updatedAt: new Date('2026-01-17').toISOString()
-                },
-                {
-                    id: 'ing_4',
-                    name: 'Beurre doux 82%',
-                    category: 'Beurres',
-                    baseUnit: 'g',
-                    displayUnit: 'kg',
-                    alertBaseQty: 2000,
-                    baseQtyRemaining: 3200,
-                    stockValue: 22400,
-                    lots: [{
-                        id: 'lot_4_1',
-                        quantiteInitiale: 5000,
-                        quantite: 3200,
-                        prixTotal: 35000,
-                        fraisApproche: 2000,
-                        dlc: new Date('2026-04-15').toISOString(),
-                        dateReception: new Date('2026-01-15').toISOString(),
-                        fournisseur: 'Laiterie Centrale',
-                        numeroLot: 'LC-BTR-2026-18',
-                        epuise: false
-                    }],
-                    createdAt: new Date('2026-01-15').toISOString(),
-                    updatedAt: new Date('2026-01-17').toISOString()
-                },
-                {
-                    id: 'ing_5',
-                    name: 'Lait entier liquide',
-                    category: 'Lait',
-                    baseUnit: 'ml',
-                    displayUnit: 'L',
-                    alertBaseQty: 3000,
-                    baseQtyRemaining: 6800,
-                    stockValue: 4080,
-                    lots: [{
-                        id: 'lot_5_1',
-                        quantiteInitiale: 10000,
-                        quantite: 6800,
-                        prixTotal: 6000,
-                        fraisApproche: 500,
-                        dlc: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString(),
-                        dateReception: new Date('2026-01-18').toISOString(),
-                        fournisseur: 'Laiterie Centrale',
-                        numeroLot: 'LC-LAIT-2026-20',
-                        epuise: false
-                    }],
-                    createdAt: new Date('2026-01-18').toISOString(),
-                    updatedAt: new Date('2026-01-18').toISOString()
-                },
-                {
-                    id: 'ing_6',
-                    name: 'Œufs frais calibre L',
-                    category: 'Œufs',
-                    baseUnit: 'piece',
-                    displayUnit: 'piece',
-                    alertBaseQty: 20,
-                    baseQtyRemaining: 38,
-                    stockValue: 5700,
-                    lots: [{
-                        id: 'lot_6_1',
-                        quantiteInitiale: 60,
-                        quantite: 38,
-                        prixTotal: 9000,
-                        fraisApproche: 0,
-                        dlc: new Date('2026-02-08').toISOString(),
-                        dateReception: new Date('2026-01-18').toISOString(),
-                        fournisseur: 'Ferme Avicole du Sud',
-                        numeroLot: 'FAS-OEUFS-2026-15',
-                        epuise: false
-                    }],
-                    alerts: [],
-                    createdAt: new Date('2026-01-18').toISOString(),
-                    updatedAt: new Date('2026-01-18').toISOString()
-                },
-                {
-                    id: 'ing_7',
-                    name: 'Levure fraîche',
-                    category: 'Levures',
-                    baseUnit: 'g',
-                    displayUnit: 'g',
-                    alertBaseQty: 200,
-                    baseQtyRemaining: 320,
-                    stockValue: 1600,
-                    lots: [{
-                        id: 'lot_7_1',
-                        quantiteInitiale: 500,
-                        quantite: 320,
-                        prixTotal: 2500,
-                        fraisApproche: 0,
-                        dlc: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
-                        dateReception: new Date('2026-01-18').toISOString(),
-                        fournisseur: 'Lesaffre Cameroun',
-                        numeroLot: 'LES-LF-2026-08',
-                        epuise: false
-                    }],
-                    createdAt: new Date('2026-01-18').toISOString(),
-                    updatedAt: new Date('2026-01-18').toISOString()
-                }
-            ],
-            
-            
-                recipes: [],
-                productions: [],
-                sales: [],
-                expenses: [
-                    { id: 'exp_demo_1', label: 'Loyer atelier janvier', category: 'Loyer', date: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0], amount: 850, currency: 'EUR', notes: 'Loyer mensuel atelier de production', createdAt: new Date().toISOString() },
-                    { id: 'exp_demo_2', label: 'Électricité + gaz', category: 'Énergie', date: new Date(new Date().getFullYear(), new Date().getMonth(), 5).toISOString().split('T')[0], amount: 210, currency: 'EUR', notes: 'Facture fournisseur énergie', createdAt: new Date().toISOString() }
-                ],
-                suppliers: [
-                    { id: 'sup_demo_1', name: 'Minoterie du Cameroun', category: 'Grossiste', contact: 'Jean Dupont', phone: '+237 699 000 001', email: 'contact@minoterie-cm.com', address: 'Zone industrielle, Douala', notes: 'Fournisseur principal farines. Livraison le mardi.', createdAt: new Date().toISOString() },
-                    { id: 'sup_demo_2', name: 'Laiterie Centrale', category: 'Producteur', contact: 'Marie Fouda', phone: '+237 699 000 002', email: 'marie@laiterie-centrale.cm', address: 'Route de Bafoussam, Yaoundé', notes: 'Beurre, lait, œufs. Livraison fraîcheur J+1.', createdAt: new Date().toISOString() }
-                ],
-                clients: [
-                    { id: 'cli_demo_1', name: 'Restaurant Le Palais', phone: '+237 699 111 111', email: 'contact@lepalais.cm', tags: ['VIP', 'Professionnel'], notes: 'Commande hebdomadaire. Paiement 30j.', createdAt: new Date().toISOString() },
-                    { id: 'cli_demo_2', name: 'Hôtel Azur', phone: '+237 699 222 222', email: 'achat@hotel-azur.cm', tags: ['Professionnel', 'Récurrent'], notes: 'Petit-déjeuner buffet. Livraison 6h.', createdAt: new Date().toISOString() }
-                ],
-                lossHistory: [
-                    { id: 'loss_demo_1', timestamp: new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate() - 2).toISOString(), ingredientId: 'ing_5', ingredientName: 'Lait entier liquide', quantity: 2000, unit: 'ml', reason: 'chaine_froid', notes: 'Coupure électricité 4h - réfrigérateur hors service', value: 1200 }
-                ],
-                vendors: [],
-                staff: []
-        };
-        
-        // ========================================
-        // DEMO MODE
-        // ========================================
-        
-        // Load demo data
-        window.loadDemoData = function() {
-            if (!confirm('⚠️ Charger les données de démonstration ?\n\nCela remplacera toutes les données actuelles par un jeu de données complet pour une boulangerie.')) {
-                return;
-            }
-            
-            try {
-                console.log('🎭 Loading demo data...');
-                
-                // Load demo data and convert to proper class instances
-                appState.data.categories = demoData.categories;
-                
-                // Convert ingredients JSON to Ingredient instances
-                appState.data.ingredients = demoData.ingredients.map((ingData, index) => {
-                    try {
-                        const Ingredient = window.Ingredient;
-                        if (Ingredient && Ingredient.fromJSON) {
-                            return Ingredient.fromJSON(ingData);
-                        } else {
-                            return ingData;
-                        }
-                    } catch (err) {
-                        console.error('❌ Error converting ingredient:', err, ingData);
-                        return ingData;
-                    }
-                });
-                
-                appState.data.recipes = demoData.recipes || [];
-                appState.data.productions = demoData.productions || [];
-                appState.data.sales = demoData.sales || [];
-                appState.data.expenses = demoData.expenses || [];
-                appState.data.suppliers = demoData.suppliers || [];
-                appState.data.clients = demoData.clients || [];
-                appState.data.lossHistory = demoData.lossHistory || [];
-                appState.data.vendors = demoData.vendors || [];
-                appState.data.staff = demoData.staff || [];
-                
-                // Save to storage
-                saveData();
-                
-                // Refresh current page
-                showPage(appState.currentPage);
-                
-                showToast('🎭 Mode Démo activé ! ' + demoData.ingredients.length + ' ingrédients + fournisseurs + clients + pertes chargés', 'success');
-                
-            } catch (error) {
-                console.error('Erreur chargement démo:', error);
-                showToast('❌ Erreur: ' + error.message, 'error');
-            }
-        };
         
         // ========================================
         // I18N & TRANSLATIONS
@@ -1554,8 +1284,20 @@
                 
                 // Convert recipes back to class instances
                 if (saved.recipes && window.Recipe && window.Recipe.fromJSON) {
+                    // Construire un index sellingPrice depuis les démos (pour corriger anciens saves)
+                    const demoPrices = {};
+                    const allDemoRecipes = [
+                        ...(window.demoWESalonRecipes || []),
+                        ...(window.demoBarLoungeRecipes || [])
+                    ];
+                    allDemoRecipes.forEach(r => { if (r.sellingPrice) demoPrices[r.id] = r.sellingPrice; });
+
                     saved.recipes = saved.recipes.map(recipe => {
                         try {
+                            // Récupérer sellingPrice depuis démo si absent
+                            if (!recipe.sellingPrice && demoPrices[recipe.id]) {
+                                recipe.sellingPrice = demoPrices[recipe.id];
+                            }
                             return window.Recipe.fromJSON(recipe);
                         } catch (err) {
                             console.error('Error converting recipe on load:', err);
@@ -1621,106 +1363,6 @@
             }
         }
         
-        /**
-         * Initialise la base d'ingrédients avec les 100 ingrédients essentiels
-         * Se déclenche automatiquement si la base est vide ou contient moins de 50 ingrédients
-         */
-        function initializeIngredientDatabase() {
-            try {
-                // Vérifier si la base a besoin d'être initialisée
-                const currentCount = appState.data.ingredients.length;
-                
-                // Détecter les ingrédients corrompus (undefined)
-                const corruptedCount = appState.data.ingredients.filter(ing => 
-                    !ing.name || ing.name === 'undefined' || !ing.id
-                ).length;
-                
-                if (corruptedCount > 0) {
-                    console.warn(`⚠️ ${corruptedCount} ingrédients corrompus détectés, nettoyage...`);
-                    // Supprimer les ingrédients corrompus
-                    appState.data.ingredients = appState.data.ingredients.filter(ing => 
-                        ing.name && ing.name !== 'undefined' && ing.id
-                    );
-                    StorageManager.save(appState.data);
-                }
-                
-                const validCount = appState.data.ingredients.length;
-                
-                // Si moins de 50 ingrédients, on propose d'ajouter la base
-                if (validCount < 50) {
-                    console.log(`🗂️ Base d'ingrédients détectée : ${validCount} ingrédients`);
-                    console.log('📥 Chargement de la base de 100 ingrédients essentiels...');
-                    
-                    // Récupérer les ingrédients de la base
-                    const coreIngredients = IngredientDatabaseCore.ingredients;
-                    
-                    // Convertir en instances Ingredient avec ID unique
-                    const newIngredients = coreIngredients.map(data => {
-                        // Créer un ID unique basé sur le nom si pas d'ID
-                        const ingredientId = data.id || `ING-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-                        
-                        // Vérifier si l'ingrédient existe déjà (par nom)
-                        const exists = appState.data.ingredients.find(ing => 
-                            ing.name.toLowerCase() === data.name.toLowerCase()
-                        );
-                        
-                        if (exists) {
-                            // Déjà présent, on skip
-                            return null;
-                        }
-                        
-                        // Créer le nouvel ingrédient avec le bon format
-                        const ingredient = new Ingredient({
-                            id: ingredientId,
-                            name: data.name,
-                            category: data.category || '',
-                            baseUnit: data.baseUnit || 'g',
-                            displayUnit: data.baseUnit || 'g',
-                            alertBaseQty: 0,
-                            yieldPercent: data.yieldPercent || 100,
-                            wasteType: data.wasteType || '',
-                            lots: [],
-                            createdAt: new Date(),
-                            updatedAt: new Date()
-                        });
-                        
-                        // Ajouter les allergènes si présents
-                        if (data.allergens && Array.isArray(data.allergens)) {
-                            ingredient.allergens = data.allergens;
-                        }
-                        
-                        // Ajouter le prix moyen si présent (pour info)
-                        if (data.avgPricePerKg) {
-                            ingredient.avgPricePerKg = data.avgPricePerKg;
-                        }
-                        
-                        return ingredient;
-                    }).filter(ing => ing !== null); // Enlever les nulls (doublons)
-                    
-                    // Ajouter à la base existante
-                    appState.data.ingredients = [...appState.data.ingredients, ...newIngredients];
-                    
-                    // Sauvegarder
-                    StorageManager.save(appState.data);
-                    
-                    console.log(`✅ ${newIngredients.length} ingrédients ajoutés à la base !`);
-                    console.log(`📊 Total : ${appState.data.ingredients.length} ingrédients disponibles`);
-                    
-                    // Afficher une notification à l'utilisateur
-                    showToast(`✅ ${newIngredients.length} ingrédients professionnels ajoutés automatiquement !`, 'success');
-                    
-                    return true;
-                }
-                
-                console.log(`✅ Base d'ingrédients déjà initialisée (${currentCount} ingrédients)`);
-                return false;
-                
-            } catch (error) {
-                console.error('❌ Erreur lors de l\'initialisation de la base d\'ingrédients:', error);
-                return false;
-            }
-        }
-
         // Save data to StorageManager
         function saveData() {
             StorageManager.save(appState.data);
@@ -1785,137 +1427,337 @@
         // Render Dashboard
         function renderDashboard() {
             const stats = DashboardService.getDashboardStats(appState.data);
-            
-            // --- HACCP KPIs ---
             const now = new Date();
             const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-            
-            // Pertes du mois (stockées dans appState.data.lossHistory)
-            const lossHistory = appState.data.lossHistory || [];
-            const monthLosses = lossHistory.filter(l => new Date(l.timestamp) >= startOfMonth);
-            const monthLossValue = monthLosses.reduce((s, l) => s + (l.value || 0), 0);
-            const monthRevenue = stats.sales.revenue || 0;
-            const lossPercent = monthRevenue > 0 ? ((monthLossValue / monthRevenue) * 100).toFixed(1) : '0.0';
-            
-            // Valeur stock instantané
-            const stockValue = stats.stock.total;
-            
-            // Lots DLC urgents (J-2 / J-1)
-            const ingredients = appState.data.ingredients || [];
+
+            // ── Données de base ──
+            const ingredients  = appState.data.ingredients  || [];
+            const productions  = appState.data.productions  || [];
+            const recipes      = appState.data.recipes      || [];
+            const packs        = appState.data.packs        || [];
+            const lossHistory  = appState.data.lossHistory  || [];
+            const expenses     = appState.data.expenses     || [];
+
+            // ── Pertes du mois ──
+            const monthLosses     = lossHistory.filter(l => new Date(l.timestamp) >= startOfMonth);
+            const monthLossValue  = monthLosses.reduce((s, l) => s + (l.value || 0), 0);
+            const totalLossValue  = lossHistory.reduce((s, l) => s + (l.value || 0), 0);
+
+            // ── Stocks ──
+            const stockIngValue   = stats.stock.ingredients || 0;
+            const stockProdValue  = stats.stock.finishedGoods || 0;
+            const stockTotal      = stats.stock.total || 0;
+
+            // ── Lots DLC urgents (J ≤ 3) ──
             const urgentLots = [];
             ingredients.forEach(ing => {
                 if (!ing.lots) return;
                 ing.lots.forEach(lot => {
                     if (lot.epuise || !lot.dlc) return;
-                    const dlcDate = new Date(lot.dlc);
-                    const daysLeft = Math.ceil((dlcDate - now) / (1000 * 60 * 60 * 24));
-                    if (daysLeft <= 2 && lot.quantite > 0) {
-                        urgentLots.push({ ing: ing.name, lot: lot.numeroLot || lot.id, daysLeft, qty: lot.quantite, unit: ing.baseUnit });
-                    }
+                    const daysLeft = Math.ceil((new Date(lot.dlc) - now) / 86400000);
+                    if (daysLeft <= 3 && (lot.quantite || 0) > 0)
+                        urgentLots.push({ name: ing.name, daysLeft, qty: lot.quantite, unit: ing.baseUnit });
                 });
             });
-            
+
+            // ── Productions actives (stock > 0) ──
+            const activeProds = productions.filter(p => (p.remainingQty || 0) > 0);
+            const totalProduced = productions.reduce((s, p) => s + (p.producedQty || 0), 0);
+
+            // ── Recettes : top 6 par marge % (si sellingPrice défini) ──
+            const recipeMargins = recipes.map(r => {
+                const sp = r.sellingPrice || 0;
+                if (sp === 0) return null;
+                try {
+                    const cost = RecipeService.calculateCost(r, ingredients);
+                    const cpu = cost.costPerUnit || 0;
+                    const pct = sp > 0 ? ((sp - cpu) / sp * 100) : 0;
+                    return { name: r.name, sellingPrice: sp, costPerUnit: cpu, marginPct: isNaN(pct) ? 0 : pct, category: r.category || '' };
+                } catch(e) { return null; }
+            }).filter(Boolean).sort((a,b) => b.marginPct - a.marginPct);
+            const topRecipes   = recipeMargins.slice(0, 6);
+            const maxMarginPct = Math.max(...topRecipes.map(r => r.marginPct), 1);
+
+            // ── Dépenses du mois ──
+            const monthExpenses = expenses.filter(e => new Date(e.date || e.createdAt) >= startOfMonth);
+            const monthExpAmt   = monthExpenses.reduce((s, e) => s + (e.amount || 0), 0);
+
+            // ── Répartition stock : donut SVG ──
+            const donutTotal = stockTotal || 1;
+            const ingShare   = stockIngValue  / donutTotal;
+            const prodShare  = stockProdValue / donutTotal;
+            const R = 40, CX = 54, CY = 54, SW = 14;
+            const circ = 2 * Math.PI * R;
+            const d1 = ingShare * circ * 0.97;
+            const d2 = prodShare * circ * 0.97;
+            const off2 = -(ingShare * circ);
+
+            // ── Graphique barres coût recettes : 7 premières recettes ──
+            const costRecipes = [...recipes].filter(r => {
+                try { return RecipeService.calculateCost(r, ingredients).totalCost > 0; } catch(e) { return false; }
+            }).slice(0, 7).map(r => {
+                try {
+                    const cost = RecipeService.calculateCost(r, ingredients);
+                    return { name: r.name.length > 16 ? r.name.slice(0,14)+'…' : r.name, cpu: cost.costPerUnit || 0 };
+                } catch(e) { return { name: r.name, cpu: 0 }; }
+            });
+            const maxCpu = Math.max(...costRecipes.map(r => r.cpu), 0.01);
+
+            // ── Alertes ──
+            const alertCount = stats.alerts ? stats.alerts.length : 0;
+            const dateStr    = now.toLocaleDateString('fr-FR', {weekday:'long', day:'numeric', month:'long'});
+
             const html = `
-                <div class="page-header">
-                    <h1 class="page-title" data-i18n="welcome">${t('welcome')}</h1>
-                    <p class="page-subtitle" data-i18n="today_overview">${t('today_overview')}</p>
+            <style>
+              .db-kpi{background:white;border-radius:var(--radius-lg);padding:18px 22px;box-shadow:var(--shadow-sm);position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s}
+              .db-kpi:hover{transform:translateY(-3px);box-shadow:var(--shadow-md)}
+              .db-kpi-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--gray);margin-bottom:5px}
+              .db-kpi-val{font-family:var(--font-display);font-size:30px;line-height:1;color:var(--dark);margin-bottom:3px}
+              .db-kpi-sub{font-size:12px;color:var(--gray)}
+              .db-kpi-stripe{height:3px;border-radius:2px;margin-top:10px}
+              .db-kpi-ghost{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:38px;opacity:.06}
+              .db-htile{border-radius:var(--radius-lg);padding:18px 22px;color:white;position:relative;overflow:hidden;box-shadow:var(--shadow-md);transition:transform .2s}
+              .db-htile:hover{transform:translateY(-3px)}
+              .db-htile-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;opacity:.8;margin-bottom:8px}
+              .db-htile-val{font-family:var(--font-display);font-size:32px;line-height:1.1;margin-bottom:2px}
+              .db-htile-sub{font-size:12px;opacity:.85}
+              .db-htile-ghost{position:absolute;right:14px;bottom:10px;font-size:48px;opacity:.12}
+              .db-card{background:white;border-radius:var(--radius-lg);padding:22px;box-shadow:var(--shadow-sm)}
+              .db-sec{font-family:var(--font-display);font-size:19px;letter-spacing:.5px;color:var(--dark);margin-bottom:12px}
+              .db-act{background:white;border-radius:var(--radius-md);padding:14px 12px;text-align:center;cursor:pointer;box-shadow:var(--shadow-sm);transition:all .2s;border:2px solid transparent}
+              .db-act:hover{border-color:var(--primary);transform:translateY(-2px);box-shadow:var(--shadow-md)}
+              .db-act-icon{font-size:26px;margin-bottom:5px}
+              .db-act-lbl{font-size:11px;font-weight:600;color:var(--dark)}
+              .db-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+              .db-bar-name{font-size:12px;font-weight:600;color:var(--dark);width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0}
+              .db-bar-track{flex:1;background:var(--light);border-radius:4px;height:8px;overflow:hidden}
+              .db-bar-fill{height:8px;border-radius:4px;transition:width .6s cubic-bezier(.4,0,.2,1)}
+              .db-bar-val{font-size:11px;font-weight:700;width:52px;text-align:right;flex-shrink:0}
+              @keyframes dbFU{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+              .db-ani{animation:dbFU .35s ease both}
+              .db-ani-2{animation:dbFU .35s .07s ease both}
+              .db-ani-3{animation:dbFU .35s .14s ease both}
+              .db-ani-4{animation:dbFU .35s .21s ease both}
+            </style>
+
+            <!-- ══ EN-TÊTE ══ -->
+            <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:20px;" class="db-ani">
+              <div>
+                <h1 style="font-family:var(--font-display);font-size:38px;letter-spacing:1px;line-height:1;color:var(--dark);margin-bottom:3px;">Tableau de bord</h1>
+                <p style="color:var(--gray);font-size:13px;text-transform:capitalize;">${dateStr}</p>
+              </div>
+              <div style="display:flex;gap:8px;">
+                <button onclick="showPage('production')" style="background:var(--dark);color:white;border:none;border-radius:var(--radius-md);padding:9px 16px;font-family:var(--font-body);font-size:12px;font-weight:600;cursor:pointer;">⚙️ Nouvelle production</button>
+                <button onclick="showPage('ingredients')" style="background:var(--primary);color:white;border:none;border-radius:var(--radius-md);padding:9px 16px;font-family:var(--font-body);font-size:12px;font-weight:600;cursor:pointer;">📦 Stock ingrédients</button>
+              </div>
+            </div>
+
+            <!-- ══ HERO TILES ══ -->
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:16px;" class="db-ani-2">
+
+              <!-- Stock ingrédients -->
+              <div class="db-htile" style="background:linear-gradient(135deg,#26DE81,#4ECDC4);" onclick="showPage('ingredients')" title="Voir les ingrédients">
+                <div class="db-htile-lbl">📦 Stock ingrédients</div>
+                <div class="db-htile-val">${formatCurrency(stockIngValue)}</div>
+                <div class="db-htile-sub">${ingredients.length} réf. en stock</div>
+                <div class="db-htile-ghost">📦</div>
+              </div>
+
+              <!-- Stock produits finis -->
+              <div class="db-htile" style="background:linear-gradient(135deg,#4ECDC4,#45AAF2);" onclick="showPage('production')" title="Voir les productions">
+                <div class="db-htile-lbl">🍽️ Produits finis</div>
+                <div class="db-htile-val">${formatCurrency(stockProdValue)}</div>
+                <div class="db-htile-sub">${activeProds.length} lot${activeProds.length!==1?'s':''} disponible${activeProds.length!==1?'s':''}</div>
+                <div class="db-htile-ghost">🍽️</div>
+              </div>
+
+              <!-- Pertes du mois -->
+              <div class="db-htile" style="background:linear-gradient(135deg,#FC5C65,#FF6B35);" onclick="showPage('ingredients')">
+                <div class="db-htile-lbl">🗑 Pertes (mois)</div>
+                <div class="db-htile-val">${formatCurrency(monthLossValue)}</div>
+                <div class="db-htile-sub">${monthLosses.length} perte${monthLosses.length!==1?'s':''} enregistrée${monthLosses.length!==1?'s':''}</div>
+                <div class="db-htile-ghost">🗑</div>
+              </div>
+
+              <!-- Alertes DLC -->
+              <div class="db-htile" onclick="showPage('ingredients')" style="background:${urgentLots.length>0?'linear-gradient(135deg,#FFA502,#FFE66D)':'linear-gradient(135deg,#45AAF2,#4ECDC4)'};cursor:pointer;">
+                <div class="db-htile-lbl">⚠️ Lots DLC ≤ 3j</div>
+                <div class="db-htile-val">${urgentLots.length}</div>
+                <div class="db-htile-sub">${urgentLots.length>0 ? urgentLots.slice(0,2).map(l=>`${l.name.split(' ')[0]} J${l.daysLeft<=0?'expiré':'-'+l.daysLeft}`).join(' · ')+(urgentLots.length>2?'…':'') : 'Aucun lot critique'}</div>
+                <div class="db-htile-ghost">⚠️</div>
+              </div>
+            </div>
+
+            <!-- ══ LIGNE 2 : KPIs secondaires ══ -->
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px;" class="db-ani-3">
+              <div class="db-kpi">
+                <div class="db-kpi-ghost">📋</div>
+                <div class="db-kpi-lbl">Recettes</div>
+                <div class="db-kpi-val">${recipes.length}</div>
+                <div class="db-kpi-sub">${recipeMargins.length} avec prix de vente</div>
+                <div class="db-kpi-stripe" style="background:var(--primary);width:${Math.min(recipes.length*10,100)}%"></div>
+              </div>
+              <div class="db-kpi">
+                <div class="db-kpi-ghost">🎁</div>
+                <div class="db-kpi-lbl">Packs</div>
+                <div class="db-kpi-val">${packs.length}</div>
+                <div class="db-kpi-sub">${packs.filter(p=>p.active!==false).length} actif${packs.filter(p=>p.active!==false).length!==1?'s':''}</div>
+                <div class="db-kpi-stripe" style="background:var(--secondary);width:${Math.min(packs.length*20,100)}%"></div>
+              </div>
+              <div class="db-kpi">
+                <div class="db-kpi-ghost">⚙️</div>
+                <div class="db-kpi-lbl">Productions</div>
+                <div class="db-kpi-val">${productions.length}</div>
+                <div class="db-kpi-sub">${totalProduced} unités produites</div>
+                <div class="db-kpi-stripe" style="background:var(--info);width:${Math.min(productions.length*8,100)}%"></div>
+              </div>
+              <div class="db-kpi">
+                <div class="db-kpi-ghost">💸</div>
+                <div class="db-kpi-lbl">Dépenses (mois)</div>
+                <div class="db-kpi-val">${formatCurrency(monthExpAmt)}</div>
+                <div class="db-kpi-sub">${monthExpenses.length} dépense${monthExpenses.length!==1?'s':''}</div>
+                <div class="db-kpi-stripe" style="background:var(--danger);width:${Math.min(monthExpenses.length*15,100)}%"></div>
+              </div>
+              <div class="db-kpi" onclick="showPage('profitability')" style="cursor:pointer;">
+                <div class="db-kpi-ghost">📊</div>
+                <div class="db-kpi-lbl">Marge moy. recettes</div>
+                <div class="db-kpi-val" style="color:${recipeMargins.length>0 && (recipeMargins.reduce((s,r)=>s+r.marginPct,0)/recipeMargins.length)>=50?'var(--success)':'var(--warning)'}">
+                  ${recipeMargins.length>0 ? (recipeMargins.reduce((s,r)=>s+r.marginPct,0)/recipeMargins.length).toFixed(1)+'%' : '—'}
                 </div>
+                <div class="db-kpi-sub">Sur ${recipeMargins.length} produit${recipeMargins.length!==1?'s':''} analysés</div>
+                <div class="db-kpi-stripe" style="background:var(--success);width:${recipeMargins.length>0?Math.min(recipeMargins.reduce((s,r)=>s+r.marginPct,0)/recipeMargins.length,100):0}%"></div>
+              </div>
+              <div class="db-kpi">
+                <div class="db-kpi-ghost">🗑</div>
+                <div class="db-kpi-lbl">Pertes totales</div>
+                <div class="db-kpi-val" style="color:${totalLossValue>0?'var(--danger)':'var(--success)'}">${formatCurrency(totalLossValue)}</div>
+                <div class="db-kpi-sub">${lossHistory.length} événement${lossHistory.length!==1?'s':''} total</div>
+                <div class="db-kpi-stripe" style="background:${totalLossValue>0?'var(--danger)':'var(--success)'};width:${totalLossValue>0?'60%':'10%'}"></div>
+              </div>
+            </div>
 
-                <!-- ═══ HACCP TILES ═══ -->
-                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:var(--space-md);margin-bottom:var(--space-xl);">
-                    <!-- Pertes alimentaires -->
-                    <div style="background:linear-gradient(135deg,#fc5c65,#ff6b35);border-radius:var(--radius-lg);padding:var(--space-lg);color:white;position:relative;overflow:hidden;box-shadow:0 8px 24px rgba(252,92,101,0.35);">
-                        <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;opacity:0.85;margin-bottom:8px;">🗑 Pertes alimentaires (mois)</div>
-                        <div style="font-size:34px;font-weight:800;margin-bottom:4px;">${formatCurrency(monthLossValue)}</div>
-                        <div style="font-size:14px;opacity:0.9;">${lossPercent}% du CA mensuel</div>
-                        <div style="font-size:12px;opacity:0.75;margin-top:4px;">${monthLosses.length} perte${monthLosses.length !== 1 ? 's' : ''} enregistrée${monthLosses.length !== 1 ? 's' : ''}</div>
-                        <div style="position:absolute;right:16px;bottom:16px;font-size:48px;opacity:0.15;">🗑</div>
-                    </div>
-                    
-                    <!-- Valeur stock T -->
-                    <div style="background:linear-gradient(135deg,#26de81,#4ecdc4);border-radius:var(--radius-lg);padding:var(--space-lg);color:white;position:relative;overflow:hidden;box-shadow:0 8px 24px rgba(38,222,129,0.35);">
-                        <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;opacity:0.85;margin-bottom:8px;">📦 Valeur stock instant T</div>
-                        <div style="font-size:34px;font-weight:800;margin-bottom:4px;">${formatCurrency(stockValue)}</div>
-                        <div style="font-size:14px;opacity:0.9;">Ingrédients + produits finis</div>
-                        <div style="font-size:12px;opacity:0.75;margin-top:4px;">${ingredients.length} ingrédient${ingredients.length !== 1 ? 's' : ''} en stock</div>
-                        <div style="position:absolute;right:16px;bottom:16px;font-size:48px;opacity:0.15;">📦</div>
-                    </div>
-                    
-                    <!-- Lots DLC urgents -->
-                    <div onclick="showPage('ingredients')" style="cursor:pointer;background:${urgentLots.length > 0 ? 'linear-gradient(135deg,#ffa502,#ffe66d)' : 'linear-gradient(135deg,#45aaf2,#4ecdc4)'};border-radius:var(--radius-lg);padding:var(--space-lg);color:white;position:relative;overflow:hidden;box-shadow:0 8px 24px rgba(255,165,2,${urgentLots.length > 0 ? '0.35' : '0.15'});transition:transform 0.2s;">
-                        <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;opacity:0.85;margin-bottom:8px;">⚠️ Lots DLC urgents (J-2/J-1)</div>
-                        <div style="font-size:34px;font-weight:800;margin-bottom:4px;">${urgentLots.length}</div>
-                        <div style="font-size:14px;opacity:0.9;">${urgentLots.length > 0 ? 'Lots à traiter en priorité' : 'Aucun lot critique'}</div>
-                        ${urgentLots.length > 0 ? `<div style="font-size:12px;opacity:0.9;margin-top:4px;">${urgentLots.slice(0,2).map(l => `${l.ing} (J${l.daysLeft <= 0 ? ' expiré' : '-' + l.daysLeft})`).join(', ')}${urgentLots.length > 2 ? '...' : ''}</div>` : ''}
-                        <div style="position:absolute;right:16px;bottom:16px;font-size:48px;opacity:0.15;">⚠️</div>
-                    </div>
+            <!-- ══ GRAPHIQUES ══ -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;" class="db-ani-4">
+
+              <!-- Top recettes par marge % -->
+              <div class="db-card">
+                <div class="db-sec">🏆 Top recettes — marge %</div>
+                ${topRecipes.length === 0 ? `
+                  <div style="text-align:center;padding:32px 0;color:var(--gray);font-size:13px;">
+                    <div style="font-size:36px;margin-bottom:8px;">📋</div>
+                    Ajoutez des prix de vente à vos recettes<br>pour voir leur rentabilité ici
+                  </div>
+                ` : topRecipes.map(r => {
+                    const w = Math.max((r.marginPct / maxMarginPct) * 100, 2);
+                    const color = r.marginPct >= 50 ? 'var(--success)' : r.marginPct >= 25 ? 'var(--warning)' : 'var(--danger)';
+                    const icon  = r.marginPct >= 50 ? '🟢' : r.marginPct >= 25 ? '🟡' : '🔴';
+                    return `<div class="db-bar-row">
+                      <div class="db-bar-name" title="${r.name}">${icon} ${r.name.length>16?r.name.slice(0,14)+'…':r.name}</div>
+                      <div class="db-bar-track"><div class="db-bar-fill" style="width:${w}%;background:${color}"></div></div>
+                      <div class="db-bar-val" style="color:${color}">${r.marginPct.toFixed(1)}%</div>
+                    </div>`;
+                  }).join('')}
+              </div>
+
+              <!-- Coût / unité par recette -->
+              <div class="db-card">
+                <div class="db-sec">💰 Coût unitaire par recette</div>
+                ${costRecipes.length === 0 ? `
+                  <div style="text-align:center;padding:32px 0;color:var(--gray);font-size:13px;">
+                    <div style="font-size:36px;margin-bottom:8px;">⚙️</div>
+                    Créez des productions pour voir<br>le coût par unité de chaque recette
+                  </div>
+                ` : costRecipes.map(r => {
+                    const w = Math.max((r.cpu / maxCpu) * 100, 2);
+                    return `<div class="db-bar-row">
+                      <div class="db-bar-name" title="${r.name}">${r.name}</div>
+                      <div class="db-bar-track"><div class="db-bar-fill" style="width:${w}%;background:linear-gradient(90deg,var(--primary),var(--accent))"></div></div>
+                      <div class="db-bar-val" style="color:var(--dark)">${formatCurrency(r.cpu)}</div>
+                    </div>`;
+                  }).join('')}
+              </div>
+
+              <!-- Répartition stock donut SVG -->
+              <div class="db-card" style="display:flex;align-items:center;gap:24px;">
+                <div>
+                  <div class="db-sec" style="margin-bottom:6px;">📊 Répartition stock</div>
+                  <svg width="108" height="108" viewBox="0 0 108 108">
+                    <!-- fond gris -->
+                    <circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="var(--light)" stroke-width="${SW}"/>
+                    <!-- ingrédients -->
+                    <circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="#26DE81"
+                      stroke-width="${SW}" stroke-dasharray="${d1} ${circ - d1}"
+                      stroke-dashoffset="0" stroke-linecap="round"
+                      transform="rotate(-90 ${CX} ${CY})"/>
+                    <!-- produits finis -->
+                    <circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="#45AAF2"
+                      stroke-width="${SW}" stroke-dasharray="${d2} ${circ - d2}"
+                      stroke-dashoffset="${off2}" stroke-linecap="round"
+                      transform="rotate(-90 ${CX} ${CY})"/>
+                    <!-- centre -->
+                    <text x="${CX}" y="${CY - 4}" text-anchor="middle" font-family="Bebas Neue,sans-serif" font-size="13" fill="var(--dark)">${(ingShare*100).toFixed(0)}%</text>
+                    <text x="${CX}" y="${CY + 12}" text-anchor="middle" font-size="9" fill="var(--gray)">ingréd.</text>
+                  </svg>
                 </div>
-
-                <!-- ═══ STATS CLASSIQUES ═══ -->
-                <div class="stats-grid">
-                    <div class="stat-card success">
-                        <div class="stat-header">
-                            <span class="stat-label" data-i18n="total_margin">${t('total_margin')}</span>
-                            <span class="stat-icon">📈</span>
-                        </div>
-                        <div class="stat-value">${formatCurrency(stats.sales.margin)}</div>
-                        <div class="stat-change positive">
-                            <span>↗</span>
-                            <span>Marge brute cumul</span>
-                        </div>
+                <div style="flex:1;">
+                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+                    <div style="width:12px;height:12px;border-radius:50%;background:#26DE81;flex-shrink:0;"></div>
+                    <div>
+                      <div style="font-size:12px;font-weight:600;color:var(--dark);">Ingrédients</div>
+                      <div style="font-size:13px;font-weight:700;color:#26DE81;">${formatCurrency(stockIngValue)}</div>
                     </div>
-
-                    <div class="stat-card primary">
-                        <div class="stat-header">
-                            <span class="stat-label">CA Total</span>
-                            <span class="stat-icon">💰</span>
-                        </div>
-                        <div class="stat-value">${formatCurrency(stats.sales.revenue)}</div>
-                        <div class="stat-change positive">
-                            <span>🛒</span>
-                            <span>${stats.sales.count} vente${stats.sales.count !== 1 ? 's' : ''}</span>
-                        </div>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+                    <div style="width:12px;height:12px;border-radius:50%;background:#45AAF2;flex-shrink:0;"></div>
+                    <div>
+                      <div style="font-size:12px;font-weight:600;color:var(--dark);">Produits finis</div>
+                      <div style="font-size:13px;font-weight:700;color:#45AAF2;">${formatCurrency(stockProdValue)}</div>
                     </div>
-
-                    <div class="stat-card danger">
-                        <div class="stat-header">
-                            <span class="stat-label" data-i18n="alerts">${t('alerts')}</span>
-                            <span class="stat-icon">⚠️</span>
-                        </div>
-                        <div class="stat-value">${stats.alerts.length}</div>
-                        <div class="stat-change">
-                            <span>Nécessitent attention</span>
-                        </div>
-                    </div>
+                  </div>
+                  <div style="border-top:1px solid var(--light);padding-top:8px;margin-top:2px;">
+                    <div style="font-size:11px;color:var(--gray);font-weight:700;text-transform:uppercase;letter-spacing:1px;">Total stock</div>
+                    <div style="font-size:18px;font-weight:800;font-family:var(--font-display);color:var(--dark);">${formatCurrency(stockTotal)}</div>
+                  </div>
                 </div>
+              </div>
 
-                <h2 style="font-family: var(--font-display); font-size: 32px; margin-bottom: var(--space-md);" data-i18n="quick_actions">${t('quick_actions')}</h2>
-                <div class="quick-actions">
-                    <div class="action-card" onclick="showPage('ingredients')">
-                        <div class="action-icon">📦</div>
-                        <div class="action-title" data-i18n="add_ingredient">${t('add_ingredient')}</div>
+              <!-- Alertes DLC urgentes détail -->
+              <div class="db-card">
+                <div class="db-sec">⚠️ Alertes DLC urgentes</div>
+                ${urgentLots.length === 0 ? `
+                  <div style="display:flex;align-items:center;gap:12px;padding:12px 0;">
+                    <div style="font-size:32px;">✅</div>
+                    <div>
+                      <div style="font-weight:600;color:var(--dark);">Aucun lot critique</div>
+                      <div style="font-size:12px;color:var(--gray);">Tous les stocks sont sains</div>
                     </div>
-                    <div class="action-card" onclick="showPage('recipes')">
-                        <div class="action-icon">📋</div>
-                        <div class="action-title" data-i18n="new_recipe">${t('new_recipe')}</div>
-                    </div>
-                    <div class="action-card" onclick="showPage('production')">
-                        <div class="action-icon">⚙️</div>
-                        <div class="action-title" data-i18n="new_production">${t('new_production')}</div>
-                    </div>
-                    <div class="action-card" onclick="showPage('sales')">
-                        <div class="action-icon">💰</div>
-                        <div class="action-title" data-i18n="record_sale">${t('record_sale')}</div>
-                    </div>
-                    <div class="action-card" onclick="showPage('expenses')">
-                        <div class="action-icon">💸</div>
-                        <div class="action-title" data-i18n="add_expense">${t('add_expense')}</div>
-                    </div>
-                    <div class="action-card" onclick="loadDemoWE()" style="border: 2px dashed var(--primary);">
-                        <div class="action-icon">🧇</div>
-                        <div class="action-title">Démo Salon Moderne</div>
-                    </div>
-                </div>
+                  </div>
+                ` : urgentLots.slice(0, 6).map(l => {
+                    const color = l.daysLeft <= 0 ? 'var(--danger)' : l.daysLeft <= 1 ? '#FC5C65' : 'var(--warning)';
+                    const badge = l.daysLeft <= 0 ? 'EXPIRÉ' : `J-${l.daysLeft}`;
+                    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--light);">
+                      <div style="font-size:13px;font-weight:600;color:var(--dark);">${l.name}</div>
+                      <div style="display:flex;align-items:center;gap:8px;">
+                        <span style="font-size:11px;color:var(--gray);">${l.qty} ${l.unit}</span>
+                        <span style="background:${color};color:white;font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;">${badge}</span>
+                      </div>
+                    </div>`;
+                  }).join('') + (urgentLots.length > 6 ? `<div style="text-align:center;font-size:12px;color:var(--gray);padding-top:8px;">+${urgentLots.length-6} autre${urgentLots.length-6>1?'s':''}</div>` : '')}
+              </div>
+            </div>
+
+            <!-- ══ ACTIONS RAPIDES ══ -->
+            <div class="db-sec" style="margin-bottom:10px;">⚡ Actions rapides</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;">
+              <div class="db-act" onclick="showPage('ingredients')"><div class="db-act-icon">📦</div><div class="db-act-lbl">Ingrédients</div></div>
+              <div class="db-act" onclick="showPage('recipes')"><div class="db-act-icon">📋</div><div class="db-act-lbl">Recettes</div></div>
+              <div class="db-act" onclick="showPage('production')"><div class="db-act-icon">⚙️</div><div class="db-act-lbl">Production</div></div>
+              <div class="db-act" onclick="showPage('profitability')"><div class="db-act-icon">📊</div><div class="db-act-lbl">Rentabilité</div></div>
+              <div class="db-act" onclick="showPage('packs')"><div class="db-act-icon">🎁</div><div class="db-act-lbl">Packs</div></div>
+              <div class="db-act" onclick="showPage('expenses')"><div class="db-act-icon">💸</div><div class="db-act-lbl">Dépenses</div></div>
+              <div class="db-act" onclick="loadDemoWE()" style="border:2px dashed var(--primary);"><div class="db-act-icon">🧇</div><div class="db-act-lbl">Démo Salon</div></div>
+              <div class="db-act" onclick="loadDemoBar()" style="border:2px dashed var(--warning);"><div class="db-act-icon">🍹</div><div class="db-act-lbl">Démo Bar</div></div>
+            </div>
             `;
 
             document.getElementById('mainContent').innerHTML = html;
@@ -2396,6 +2238,56 @@
         // ========================================
         
         // Get categories as select options
+        // ── Catégories recettes dynamiques ──────────────────────
+        function getRecipeCategoryOptions(selected) {
+            const cats = appState.data.recipeCategories || [];
+            // Catégories par défaut si aucune définie
+            const defaults = ['Nectars & Jus', 'Cocktails', 'Boissons chaudes', 'Pâtisserie', 'Viennoiserie', 'Pain', 'Snacking', 'Gaufres & Crêpes', 'Plats', 'Desserts', 'Autre'];
+            const all = cats.length > 0 ? cats : defaults;
+            return all.map(c => '<option value="' + c + '"' + (c === selected ? ' selected' : '') + '>' + c + '</option>').join('');
+        }
+
+        function handleEditRecipeCategoryChange(sel) {
+            var newInput = document.getElementById('editRecipeCategoryNew');
+            if (!newInput) return;
+            if (sel.value === '__new__') {
+                newInput.style.display = 'block';
+                newInput.focus();
+            } else {
+                newInput.style.display = 'none';
+                newInput.value = '';
+            }
+        }
+
+        function handleCreateRecipeCategoryChange(sel) {
+            var newInput = document.getElementById('createRecipeCategoryNew');
+            if (!newInput) return;
+            if (sel.value === '__new__') {
+                newInput.style.display = 'block';
+                newInput.focus();
+            } else {
+                newInput.style.display = 'none';
+                newInput.value = '';
+            }
+        }
+
+        function resolveRecipeCategory(formData) {
+            // Si "__new__" sélectionné, utiliser le champ texte et mémoriser la catégorie
+            var selectVal = formData.get('category');
+            var newVal    = (formData.get('categoryNew') || '').trim();
+            var finalCat  = (selectVal === '__new__' && newVal) ? newVal : (selectVal || '');
+            // Mémoriser pour les prochaines fois
+            if (finalCat && finalCat !== '__new__') {
+                var cats = appState.data.recipeCategories || [];
+                if (!cats.includes(finalCat)) {
+                    cats.push(finalCat);
+                    appState.data.recipeCategories = cats;
+                }
+            }
+            return finalCat === '__new__' ? '' : finalCat;
+        }
+        // ────────────────────────────────────────────────────────
+
         function getCategoriesOptions() {
             const categories = appState.data.categories || [];
             const mainCategories = categories.filter(c => !c.parent);
@@ -2718,9 +2610,229 @@
             document.getElementById('profitabilityTable').innerHTML = renderProfitabilityTable(products);
         }
         
-        // Placeholder pour simulateur de prix (à développer dans fonctionnalité 3)
+        // ════════════════════════════════════════════
+        // SIMULATEUR DE PRIX
+        // ════════════════════════════════════════════
         window.showProductPriceSimulator = function(productId, productType) {
-            showToast('💡 Simulateur de prix - Bientôt disponible !', 'info');
+            // Récupérer le produit
+            const ingredients = appState.data.ingredients || [];
+            let name = '', costPerUnit = 0, currentPrice = 0, producedQty = 1, unit = 'unité';
+
+            if (productType === 'recipe') {
+                const recipe = (appState.data.recipes || []).find(r => r.id === productId);
+                if (!recipe) return showToast('Recette introuvable', 'error');
+                const costResult = RecipeService.calculateCost(recipe, ingredients);
+                costPerUnit   = costResult.costPerUnit || 0;
+                currentPrice  = recipe.sellingPrice || 0;
+                producedQty   = recipe.producedQty || 1;
+                unit          = recipe.producedUnit || 'unité';
+                name          = recipe.name;
+            } else {
+                const pack = (appState.data.packs || []).find(p => p.id === productId);
+                if (!pack) return showToast('Pack introuvable', 'error');
+                const recipes = appState.data.recipes || [];
+                const rawCost = pack.getCost ? pack.getCost(recipes, ingredients) : 0;
+                costPerUnit   = isNaN(rawCost) ? 0 : rawCost;
+                currentPrice  = pack.price || 0;
+                producedQty   = 1;
+                unit          = 'pack';
+                name          = pack.name;
+            }
+
+            // Plage du slider : cost × 1.0 → cost × 3.5 (ou au moins 0.10)
+            const minPrice  = Math.max(costPerUnit * 1.0, 0.10);
+            const maxPrice  = Math.max(costPerUnit * 3.5, 1.00);
+            const initPrice = currentPrice > 0 ? currentPrice : Math.max(costPerUnit * 1.35, 0.10);
+
+            // Créer la modal
+            const existingModal = document.getElementById('priceSimulatorModal');
+            if (existingModal) existingModal.remove();
+
+            const modal = document.createElement('div');
+            modal.id = 'priceSimulatorModal';
+            modal.style.cssText = `
+                position:fixed;top:0;left:0;width:100%;height:100%;
+                background:rgba(26,26,46,0.6);backdrop-filter:blur(4px);
+                display:flex;align-items:center;justify-content:center;
+                z-index:10000;animation:dbFU .2s ease;
+            `;
+
+            modal.innerHTML = `
+            <div style="background:white;border-radius:24px;padding:32px;width:520px;max-width:95vw;box-shadow:0 24px 64px rgba(0,0,0,0.25);position:relative;">
+                <button onclick="document.getElementById('priceSimulatorModal').remove()"
+                    style="position:absolute;top:16px;right:16px;background:none;border:none;font-size:20px;cursor:pointer;color:var(--gray);line-height:1;">✕</button>
+
+                <div style="margin-bottom:20px;">
+                    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--gray);margin-bottom:4px;">Simulateur de prix</div>
+                    <h2 style="font-family:var(--font-display);font-size:26px;color:var(--dark);margin:0;">${name}</h2>
+                    <p style="font-size:12px;color:var(--gray);margin-top:4px;">Coût unitaire : <strong style="color:var(--dark);">${formatCurrency(costPerUnit)}</strong> / ${unit}</p>
+                </div>
+
+                <!-- Slider prix de vente -->
+                <div style="margin-bottom:24px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                        <label style="font-size:13px;font-weight:600;color:var(--dark);">Prix de vente simulé</label>
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <input type="number" id="simPriceInput" value="${initPrice.toFixed(2)}" min="${minPrice.toFixed(2)}" max="${maxPrice.toFixed(2)}" step="0.05"
+                                style="width:80px;border:2px solid var(--primary);border-radius:8px;padding:5px 8px;font-size:14px;font-weight:700;color:var(--primary);text-align:center;font-family:var(--font-body);">
+                            <span style="font-size:13px;color:var(--gray);">€</span>
+                        </div>
+                    </div>
+                    <input type="range" id="simPriceSlider"
+                        min="${minPrice.toFixed(2)}" max="${maxPrice.toFixed(2)}" step="0.05"
+                        value="${initPrice.toFixed(2)}"
+                        style="width:100%;height:6px;accent-color:var(--primary);cursor:pointer;">
+                    <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--gray);margin-top:4px;">
+                        <span>Min ${formatCurrency(minPrice)}</span>
+                        <span>Max ${formatCurrency(maxPrice)}</span>
+                    </div>
+                </div>
+
+                <!-- Résultats dynamiques -->
+                <div id="simResults" style="background:var(--light);border-radius:16px;padding:20px;margin-bottom:20px;">
+                    <!-- rempli par updateSimulator() -->
+                </div>
+
+                <!-- Comparaison avec prix actuel -->
+                ${currentPrice > 0 ? `
+                <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:14px;margin-bottom:20px;font-size:13px;">
+                    <div style="font-weight:700;color:#16a34a;margin-bottom:4px;">📌 Prix actuel : ${formatCurrency(currentPrice)}</div>
+                    <div id="simComparison" style="color:#15803d;"></div>
+                </div>` : `
+                <div style="background:#fefce8;border:1px solid #fde68a;border-radius:12px;padding:14px;margin-bottom:20px;font-size:13px;color:#92400e;">
+                    ℹ️ Aucun prix de vente défini actuellement pour ce produit.
+                </div>`}
+
+                <!-- Cibles de marge rapides -->
+                <div style="margin-bottom:24px;">
+                    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--gray);margin-bottom:10px;">Cibles rapides</div>
+                    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">
+                        ${[25,35,50,65].map(pct => {
+                            const targetPrice = costPerUnit > 0 ? costPerUnit / (1 - pct/100) : 0;
+                            return `<button onclick="setSimPrice(${targetPrice.toFixed(2)})"
+                                style="background:white;border:2px solid var(--light);border-radius:10px;padding:10px 4px;cursor:pointer;transition:all .2s;font-family:var(--font-body);">
+                                <div style="font-size:16px;font-weight:800;font-family:var(--font-display);color:var(--dark);">${pct}%</div>
+                                <div style="font-size:11px;color:var(--gray);">${formatCurrency(targetPrice)}</div>
+                            </button>`;
+                        }).join('')}
+                    </div>
+                </div>
+
+                <!-- Bouton appliquer -->
+                <div style="display:flex;gap:10px;">
+                    <button onclick="applySimulatedPrice('${productId}','${productType}')"
+                        style="flex:1;background:var(--primary);color:white;border:none;border-radius:12px;padding:14px;font-family:var(--font-body);font-size:14px;font-weight:700;cursor:pointer;">
+                        ✅ Appliquer ce prix
+                    </button>
+                    <button onclick="document.getElementById('priceSimulatorModal').remove()"
+                        style="background:var(--light);color:var(--gray);border:none;border-radius:12px;padding:14px 20px;font-family:var(--font-body);font-size:14px;font-weight:600;cursor:pointer;">
+                        Annuler
+                    </button>
+                </div>
+            </div>`;
+
+            document.body.appendChild(modal);
+
+            // Fermer en cliquant en dehors
+            modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+
+            // Logique slider ↔ input synchronisés
+            const slider = document.getElementById('simPriceSlider');
+            const input  = document.getElementById('simPriceInput');
+
+            function updateSimulator(price) {
+                price = Math.max(Number(price) || 0, 0);
+                var margin     = price - costPerUnit;
+                var marginPct  = price > 0 ? (margin / price * 100) : 0;
+                var marginColor = marginPct >= 50 ? '#16a34a' : marginPct >= 25 ? '#d97706' : '#dc2626';
+                var marginIcon  = marginPct >= 50 ? '\u{1F7E2}' : marginPct >= 25 ? '\u{1F7E1}' : '\u{1F534}';
+                var label       = marginPct >= 50 ? 'Excellent' : marginPct >= 25 ? 'Correct' : marginPct >= 0 ? 'Faible' : 'En perte';
+                var barW     = Math.min(Math.max(marginPct, 0), 100);
+                var barColor = marginPct >= 50 ? '#26DE81' : marginPct >= 25 ? '#FFA502' : '#FC5C65';
+
+                var html = '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px;">'
+                    + '<div style="text-align:center;">'
+                    +   '<div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--gray);margin-bottom:4px;">Marge €</div>'
+                    +   '<div style="font-size:22px;font-weight:800;font-family:var(--font-display);color:' + marginColor + ';">' + formatCurrency(margin) + '</div>'
+                    + '</div>'
+                    + '<div style="text-align:center;">'
+                    +   '<div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--gray);margin-bottom:4px;">Marge %</div>'
+                    +   '<div style="font-size:22px;font-weight:800;font-family:var(--font-display);color:' + marginColor + ';">' + marginPct.toFixed(1) + '%</div>'
+                    + '</div>'
+                    + '<div style="text-align:center;">'
+                    +   '<div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--gray);margin-bottom:4px;">Statut</div>'
+                    +   '<div style="font-size:14px;font-weight:700;color:' + marginColor + ';">' + marginIcon + ' ' + label + '</div>'
+                    + '</div>'
+                    + '</div>'
+                    + '<div style="background:white;border-radius:8px;overflow:hidden;height:10px;">'
+                    +   '<div style="height:10px;border-radius:8px;background:' + barColor + ';width:' + barW + '%;transition:width .3s;"></div>'
+                    + '</div>'
+                    + '<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--gray);margin-top:4px;">'
+                    +   '<span>Coût : ' + formatCurrency(costPerUnit) + '</span>'
+                    +   '<span>PV simulé : ' + formatCurrency(price) + '</span>'
+                    + '</div>';
+
+                document.getElementById('simResults').innerHTML = html;
+
+                if (currentPrice > 0) {
+                    var compEl = document.getElementById('simComparison');
+                    if (compEl) {
+                        var diff = price - currentPrice;
+                        var sign = diff >= 0 ? '+' : '';
+                        compEl.textContent = 'Variation vs prix actuel : ' + sign + formatCurrency(diff) + ' (' + sign + (diff/currentPrice*100).toFixed(1) + '%)';
+                    }
+                }
+
+                window._simCurrentPrice = price;
+            }
+
+            slider.addEventListener('input', e => {
+                input.value = Number(e.target.value).toFixed(2);
+                updateSimulator(e.target.value);
+            });
+            input.addEventListener('input', e => {
+                const v = parseFloat(e.target.value) || 0;
+                slider.value = Math.min(Math.max(v, minPrice), maxPrice);
+                updateSimulator(v);
+            });
+
+            // setSimPrice : appelé par les cibles rapides
+            window.setSimPrice = function(price) {
+                price = Math.max(price, minPrice);
+                price = Math.min(price, maxPrice);
+                slider.value = price.toFixed(2);
+                input.value  = price.toFixed(2);
+                updateSimulator(price);
+            };
+
+            // Init
+            updateSimulator(initPrice);
+        };
+
+        // Appliquer le prix simulé au produit
+        window.applySimulatedPrice = function(productId, productType) {
+            const price = window._simCurrentPrice;
+            if (!price || price <= 0) return showToast('Prix invalide', 'error');
+
+            if (productType === 'recipe') {
+                const idx = (appState.data.recipes || []).findIndex(r => r.id === productId);
+                if (idx === -1) return;
+                appState.data.recipes[idx].sellingPrice = price;
+                appState.data.recipes[idx].pricePerUnit = price;
+            } else {
+                const idx = (appState.data.packs || []).findIndex(p => p.id === productId);
+                if (idx === -1) return;
+                appState.data.packs[idx].price = price;
+            }
+
+            saveData();
+            document.getElementById('priceSimulatorModal').remove();
+            showToast('✅ Prix mis à jour : ' + formatCurrency(price), 'success');
+
+            // Rafraîchir la page rentabilité si on y est
+            if (appState.currentPage === 'profitability') {
+                renderProfitabilityPage();
+            }
         };
 
         // Render recipe cards
@@ -2841,13 +2953,15 @@
                                 </div>
                                 <div class="form-group">
                                     <label>Catégorie</label>
-                                    <select name="category">
-                                        <option value="">Aucune</option>
-                                        <option value="Pain" ${recipe.category === 'Pain' ? 'selected' : ''}>Pain</option>
-                                        <option value="Viennoiserie" ${recipe.category === 'Viennoiserie' ? 'selected' : ''}>Viennoiserie</option>
-                                        <option value="Pâtisserie" ${recipe.category === 'Pâtisserie' ? 'selected' : ''}>Pâtisserie</option>
-                                        <option value="Snacking" ${recipe.category === 'Snacking' ? 'selected' : ''}>Snacking</option>
-                                    </select>
+                                    <div style="display:flex;gap:6px;">
+                                        <select name="category" id="editRecipeCategorySelect" style="flex:1;" onchange="handleEditRecipeCategoryChange(this)">
+                                            <option value="">Aucune</option>
+                                            ${getRecipeCategoryOptions(recipe.category)}
+                                            <option value="__new__">+ Nouvelle catégorie…</option>
+                                        </select>
+                                    </div>
+                                    <input type="text" id="editRecipeCategoryNew" name="categoryNew" placeholder="Nom de la nouvelle catégorie"
+                                        style="display:none;margin-top:6px;width:100%;padding:8px 12px;border:2px solid var(--primary);border-radius:var(--radius-sm);font-family:var(--font-body);">
                                 </div>
                             </div>
                             
@@ -2866,7 +2980,7 @@
                                 </div>
                                 <div class="form-group">
                                     <label>Prix de vente unitaire</label>
-                                    <input type="number" name="sellingPrice" value="${recipe.sellingPrice || ''}" min="0" step="0.01" placeholder="Optionnel">
+                                    <input type="number" name="sellingPrice" value="${recipe.sellingPrice > 0 ? recipe.sellingPrice : ''}" min="0" step="0.01" placeholder="Optionnel">
                                     <small style="color: var(--gray);">Prix de vente par ${recipe.producedUnit}</small>
                                 </div>
                             </div>
@@ -3078,12 +3192,16 @@
                 return;
             }
             
+            // Lire sellingPrice directement depuis le DOM (plus fiable que FormData pour type=number)
+            const spInput = document.querySelector('#editRecipeForm input[name="sellingPrice"]');
+            const spValue = spInput ? (parseFloat(spInput.value) || 0) : (Number(formData.get('sellingPrice')) || 0);
+
             const recipeData = {
                 name: formData.get('name'),
-                category: formData.get('category'),
+                category: resolveRecipeCategory(formData),
                 producedQty: Number(formData.get('producedQty')),
                 producedUnit: formData.get('producedUnit'),
-                sellingPrice: Number(formData.get('sellingPrice')) || null,
+                sellingPrice: spValue,
                 ingredients: ingredients
             };
             
@@ -3095,12 +3213,14 @@
                     return;
                 }
                 
-                // Mettre à jour en conservant l'ID
-                appState.data.recipes[recipeIndex] = {
-                    ...appState.data.recipes[recipeIndex],
+                // Mettre à jour en conservant l'ID — reconstruire une vraie instance Recipe
+                const updatedRecipe = Recipe.fromJSON({
+                    ...appState.data.recipes[recipeIndex].toJSON ? appState.data.recipes[recipeIndex].toJSON() : appState.data.recipes[recipeIndex],
                     ...recipeData,
-                    updatedAt: new Date()
-                };
+                    id: appState.data.recipes[recipeIndex].id,
+                    updatedAt: new Date().toISOString()
+                });
+                appState.data.recipes[recipeIndex] = updatedRecipe;
                 
                 saveData();
                 renderRecipesPage();
@@ -3124,13 +3244,13 @@
                 return;
             }
             
-            const newRecipe = {
-                ...recipe,
+            const newRecipe = Recipe.fromJSON({
+                ...recipe.toJSON ? recipe.toJSON() : recipe,
                 id: 'recipe_' + Date.now(),
                 name: recipe.name + ' (copie)',
-                createdAt: new Date(),
-                updatedAt: new Date()
-            };
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            });
             
             appState.data.recipes.push(newRecipe);
             saveData();
@@ -5337,13 +5457,15 @@
                                 </div>
                                 <div class="form-group">
                                     <label>Catégorie</label>
-                                    <select name="category">
-                                        <option value="">Sans catégorie</option>
-                                        <option value="Pain">Pain</option>
-                                        <option value="Viennoiserie">Viennoiserie</option>
-                                        <option value="Pâtisserie">Pâtisserie</option>
-                                        <option value="Autre">Autre</option>
-                                    </select>
+                                    <div style="display:flex;gap:6px;">
+                                        <select name="category" id="createRecipeCategorySelect" style="flex:1;" onchange="handleCreateRecipeCategoryChange(this)">
+                                            <option value="">Aucune</option>
+                                            ${getRecipeCategoryOptions('')}
+                                            <option value="__new__">+ Nouvelle catégorie…</option>
+                                        </select>
+                                    </div>
+                                    <input type="text" id="createRecipeCategoryNew" name="categoryNew" placeholder="Nom de la nouvelle catégorie"
+                                        style="display:none;margin-top:6px;width:100%;padding:8px 12px;border:2px solid var(--primary);border-radius:var(--radius-sm);font-family:var(--font-body);">
                                 </div>
                             </div>
                             
@@ -5586,9 +5708,10 @@
             try {
                 const recipe = RecipeService.create({
                     name: formData.get('name'),
-                    category: formData.get('category'),
+                    category: resolveRecipeCategory(formData),
                     producedQty: Number(formData.get('producedQty')),
                     producedUnit: formData.get('producedUnit'),
+                    sellingPrice: parseFloat(document.querySelector('#createRecipeForm input[name="sellingPrice"]')?.value || formData.get('sellingPrice') || '0') || 0,
                     preparationTime: Number(formData.get('preparationTime')) || 0,
                     instructions: formData.get('instructions') || ''
                 });
@@ -6064,9 +6187,9 @@
                     return;
                 }
                 
-                // Chercher dans la base d'ingrédients
-                const matches = IngredientDatabaseCore.ingredients.filter(ing => 
-                    ing.name.toLowerCase().includes(query)
+                // Chercher dans les ingrédients en stock
+                const matches = (appState.data.ingredients || []).filter(ing => 
+                    ing.name && ing.name.toLowerCase().includes(query)
                 ).slice(0, 10); // Max 10 suggestions
                 
                 if (matches.length === 0) {
@@ -6646,6 +6769,8 @@
         
         async function handleAddIngredient(e) {
             e.preventDefault();
+            
+            // ✅ L'utilisateur ajoute ses propres données → sortie mode démo
             
             const formData = new FormData(e.target);
             const data = {
@@ -7888,12 +8013,51 @@
                     
                     // Recharger
                     showToast('✅ Démo "Le Salon Moderne" chargée avec succès !', 'success');
+                    // ✅ Flag pour bloquer l'auto-init de la base
                     setTimeout(() => location.reload(), 1000);
                     
                 } catch (error) {
                     console.error('Erreur chargement démo:', error);
                     showToast('❌ Erreur: ' + error.message, 'error');
                 }
+            }
+        };
+
+        window.loadDemoBar = function() {
+            if (!confirm('🍹 Charger la démo "Le Velvet Bar Lounge" ?\n\nCeci remplacera toutes vos données par :\n- 29 ingrédients (spiritueux, vins, sirops, fruits, softs)\n- 8 recettes cocktails & softs\n- 6 productions (weekend)\n- 5 ventes avec marges ~87-92%\n- Fournisseurs & clients pro\n\nContinuer ?')) {
+                return;
+            }
+            try {
+                localStorage.clear();
+
+                const convertedIngredients = demoBarLounge.ingredients.map(ing => Ingredient.fromJSON(ing));
+                const convertedRecipes = demoBarLounge.recipes.map(rec => Recipe.fromJSON(rec));
+                const convertedProductions = demoBarLounge.productions.map(prod => Production.fromJSON(prod));
+
+                appState.data = {
+                    ingredients: convertedIngredients,
+                    recipes: convertedRecipes,
+                    productions: convertedProductions,
+                    sales: demoBarLounge.sales || [],
+                    expenses: demoBarLounge.expenses || [],
+                    categories: demoBarLounge.categories || [],
+                    suppliers: demoBarLounge.suppliers || [],
+                    clients: demoBarLounge.clients || [],
+                    lossHistory: demoBarLounge.lossHistory || [],
+                    movements: demoBarLounge.movements || [],
+                    vendors: demoBarLounge.vendors || [],
+                    staff: demoBarLounge.staff || [],
+                    packs: demoBarLounge.packs || [],
+                    settings: demoBarLounge.settings || appState.data.settings || {}
+                };
+
+                saveData();
+                showToast('🍹 Démo "Le Velvet Bar Lounge" chargée avec succès !', 'success');
+                setTimeout(() => location.reload(), 1000);
+
+            } catch (error) {
+                console.error('Erreur chargement démo bar:', error);
+                showToast('❌ Erreur: ' + error.message, 'error');
             }
         };
 
@@ -7904,7 +8068,6 @@
             loadExchangeRates();
             
             // Initialiser automatiquement la base de 100 ingrédients si nécessaire
-            initializeIngredientDatabase();
             
             // Load saved currency preference
             const savedCurrency = localStorage.getItem('selectedCurrency');

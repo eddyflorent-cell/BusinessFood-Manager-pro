@@ -19,10 +19,10 @@ export class RecipeIngredient {
   constructor(data) {
     this.ingredientId = data.ingredientId;
     this.ingredientName = data.ingredientName;
-    this.quantity = Number(data.quantity);
+    this.quantity = Number(data.quantity) || 0;
     this.unit = data.unit;
-    this.baseQty = Number(data.baseQty);
-    this.baseUnit = data.baseUnit;
+    this.baseQty = Number(data.baseQty) || Number(data.quantity) || 0; // fallback sur quantity si baseQty absent
+    this.baseUnit = data.baseUnit || data.unit || 'g';
   }
 
   toJSON() {
@@ -70,7 +70,10 @@ export class Recipe {
     this.producedUnit = data.producedUnit || 'piece';
     this.preparationTime = Number(data.preparationTime) || 0;
     this.instructions = data.instructions || '';
-    this.seasoningPercent = Number(data.seasoningPercent) || 3; // Forfait assaisonnements (sel, poivre, huile)
+    this.seasoningPercent = Number(data.seasoningPercent) || 3;
+    // ✅ Prix de vente — supporte les deux nommages
+    this.sellingPrice = Number(data.sellingPrice) || Number(data.pricePerUnit) || 0;
+    this.pricePerUnit  = this.sellingPrice; // alias rétrocompat
     this.createdAt = data.createdAt instanceof Date ? data.createdAt : new Date(data.createdAt || Date.now());
     this.updatedAt = data.updatedAt instanceof Date ? data.updatedAt : new Date(data.updatedAt || Date.now());
   }
@@ -141,6 +144,8 @@ export class Recipe {
       preparationTime: this.preparationTime,
       instructions: this.instructions,
       seasoningPercent: this.seasoningPercent,
+      sellingPrice: this.sellingPrice || 0,
+      pricePerUnit: this.sellingPrice || 0,
       createdAt: this.createdAt.toISOString(),
       updatedAt: this.updatedAt.toISOString()
     };

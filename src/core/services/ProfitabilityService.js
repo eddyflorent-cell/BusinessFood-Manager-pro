@@ -16,31 +16,41 @@ export class ProfitabilityService {
     
     // Analyser les recettes
     for (const recipe of recipes) {
-      const recipeObj = recipe instanceof Recipe ? recipe : Recipe.fromJSON(recipe);
-      const analysis = this.analyzeRecipe(recipeObj, ingredients);
-      if (analysis) {
-        productsAnalysis.push({
-          ...analysis,
-          type: 'recipe',
-          id: recipeObj.id,
-          name: recipeObj.name,
-          category: recipeObj.category || 'Recettes'
-        });
+      try {
+        const recipeObj = recipe instanceof Recipe ? recipe : Recipe.fromJSON(recipe);
+        const analysis = this.analyzeRecipe(recipeObj, ingredients);
+        if (analysis) {
+          productsAnalysis.push({
+            ...analysis,
+            classification: analysis.status, // alias pour le template
+            type: 'recipe',
+            id: recipeObj.id,
+            name: recipeObj.name,
+            category: recipeObj.category || 'Recettes'
+          });
+        }
+      } catch (e) {
+        console.warn('ProfitabilityService: erreur analyse recette', recipe?.id, e.message);
       }
     }
     
     // Analyser les packs
     for (const pack of packs) {
-      const packObj = pack instanceof Pack ? pack : Pack.fromJSON(pack);
-      const analysis = this.analyzePack(packObj, recipes, ingredients);
-      if (analysis) {
-        productsAnalysis.push({
-          ...analysis,
-          type: 'pack',
-          id: packObj.id,
-          name: packObj.name,
-          category: 'Packs & Menus'
-        });
+      try {
+        const packObj = pack instanceof Pack ? pack : Pack.fromJSON(pack);
+        const analysis = this.analyzePack(packObj, recipes, ingredients);
+        if (analysis) {
+          productsAnalysis.push({
+            ...analysis,
+            classification: analysis.status, // alias pour le template
+            type: 'pack',
+            id: packObj.id,
+            name: packObj.name,
+            category: 'Packs & Menus'
+          });
+        }
+      } catch (e) {
+        console.warn('ProfitabilityService: erreur analyse pack', pack?.id, e.message);
       }
     }
     
@@ -61,12 +71,13 @@ export class ProfitabilityService {
    * Analyse une recette
    */
   static analyzeRecipe(recipe, ingredients) {
-    // Prix de vente
-    const price = Number(recipe.pricePerUnit) || 0;
-    if (price === 0) return null; // Pas de prix = pas d'analyse
+    // Prix de vente — supporte sellingPrice (démos) et pricePerUnit (ancien format)
+    const price = Number(recipe.sellingPrice) || Number(recipe.pricePerUnit) || 0;
+    if (price === 0 || isNaN(price)) return null;
     
     // Coût de production
-    const cost = recipe.getCostPerUnit ? recipe.getCostPerUnit(ingredients) : 0;
+    const rawCost = recipe.getCostPerUnit ? recipe.getCostPerUnit(ingredients) : 0;
+    const cost = isNaN(rawCost) ? 0 : Number(rawCost);
     
     // Calcul de la marge
     const margin = price - cost;
@@ -92,7 +103,7 @@ export class ProfitabilityService {
       status,
       suggestedPrices,
       producedQty: recipe.producedQty || 1,
-      unit: recipe.unit || 'portion'
+      unit: recipe.producedUnit || recipe.unit || 'portion'
     };
   }
   
@@ -102,19 +113,24 @@ export class ProfitabilityService {
   static analyzePack(pack, recipes, ingredients) {
     // Prix de vente du pack
     const price = Number(pack.price) || 0;
-    if (price === 0) return null;
+    if (price === 0 || isNaN(price)) return null;
     
     // Coût = somme des coûts des recettes incluses
     let totalCost = 0;
     
     for (const item of pack.items || []) {
-      const recipe = recipes.find(r => r.id === item.recipeId);
+      // Pack.items utilise productionId comme clé de recette (pas recipeId)
+      const recipeId = item.recipeId || item.productionId;
+      const recipe = recipes.find(r => r.id === recipeId);
       if (recipe) {
         const recipeObj = recipe instanceof Recipe ? recipe : Recipe.fromJSON(recipe);
         const recipeCost = recipeObj.getCostPerUnit ? recipeObj.getCostPerUnit(ingredients) : 0;
-        totalCost += recipeCost * (item.quantity || 1);
+        const itemCost = (isNaN(recipeCost) ? 0 : recipeCost) * (item.quantity || 1);
+        totalCost += isNaN(itemCost) ? 0 : itemCost;
       }
     }
+    
+    totalCost = isNaN(totalCost) ? 0 : totalCost;
     
     // Calcul de la marge
     const margin = price - totalCost;

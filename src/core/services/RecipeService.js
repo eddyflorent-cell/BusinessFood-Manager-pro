@@ -217,9 +217,10 @@ export class RecipeService {
       const pricePerBaseUnit = ingredient.getPricePerBaseUnit ? ingredient.getPricePerBaseUnit() : 0;
       
       // Calculer le coût pour cet ingrédient (en utilisant baseQty qui est déjà convertie)
-      const cost = pricePerBaseUnit * recipeIng.baseQty;
+      const baseQty = Number(recipeIng.baseQty) || Number(recipeIng.quantity) || 0;
+      const cost = isNaN(pricePerBaseUnit) ? 0 : pricePerBaseUnit * baseQty;
       
-      totalCost += cost;
+      totalCost += isNaN(cost) ? 0 : cost;
       
       ingredientCosts.push({
         name: ingredient.name,
