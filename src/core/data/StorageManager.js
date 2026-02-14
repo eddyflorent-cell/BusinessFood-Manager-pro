@@ -23,7 +23,7 @@ export class StorageManager {
   
   static STORAGE_KEY = 'BFM_DATA';
   static BACKUP_KEY = 'BFM_BACKUP';
-  static QUOTA_THRESHOLD = 0.8; // 80% du quota
+  static QUOTA_THRESHOLD = 0.90; // 90% du quota (augmenté de 80% pour plus de marge)
   
   /**
    * Sauvegarde les données
@@ -268,21 +268,20 @@ export class StorageManager {
    */
   static cleanup() {
     try {
-      // Supprimer backup si trop vieux (> 7 jours)
+      // Supprimer backup si trop vieux (> 3 jours au lieu de 7)
       const backup = localStorage.getItem(this.BACKUP_KEY);
       if (backup) {
         try {
           const backupData = JSON.parse(backup);
-          // ✅ Créer timestamp si manquant (legacy backups)
           if (!backupData.timestamp) {
-            // Pas de timestamp = on suppose ancien, on le garde par sécurité
+            // Pas de timestamp = supposé récent, on garde
             return;
           }
           
           const age = Date.now() - new Date(backupData.timestamp).getTime();
-          const sevenDays = 7 * 24 * 60 * 60 * 1000;
+          const threeDays = 3 * 24 * 60 * 60 * 1000;
           
-          if (age > sevenDays) {
+          if (age > threeDays) {
             localStorage.removeItem(this.BACKUP_KEY);
           }
         } catch (e) {
@@ -291,11 +290,16 @@ export class StorageManager {
         }
       }
       
-      // Supprimer autres clés obsolètes (commençant par BFM_OLD_)
+      // Supprimer TOUTES clés obsolètes qui ne sont pas BFM_DATA ou BFM_BACKUP
       const keysToRemove = [];
+      const whitelist = [this.STORAGE_KEY, this.BACKUP_KEY, 'exchangeRates'];
+      
       for (let key in localStorage) {
-        if (localStorage.hasOwnProperty(key) && key.startsWith('BFM_OLD_')) {
-          keysToRemove.push(key);
+        if (localStorage.hasOwnProperty(key) && !whitelist.includes(key)) {
+          // Supprimer clés obsolètes BFM_OLD_, ou clés étrangères si > 100KB
+          if (key.startsWith('BFM_OLD_') || key.startsWith('OLD_') || key.startsWith('BACKUP_')) {
+            keysToRemove.push(key);
+          }
         }
       }
       

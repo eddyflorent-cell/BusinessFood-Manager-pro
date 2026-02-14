@@ -71,9 +71,14 @@ export class Recipe {
     this.preparationTime = Number(data.preparationTime) || 0;
     this.instructions = data.instructions || '';
     this.seasoningPercent = Number(data.seasoningPercent) || 3;
-    // ✅ Prix de vente — supporte les deux nommages
-    this.sellingPrice = Number(data.sellingPrice) || Number(data.pricePerUnit) || 0;
-    this.pricePerUnit  = this.sellingPrice; // alias rétrocompat
+    // ✅ Prix de vente — supporte les deux nommages, sans traiter 0 comme falsy
+    const sp = data.sellingPrice !== undefined && data.sellingPrice !== null && data.sellingPrice !== ''
+      ? Number(data.sellingPrice)
+      : (data.pricePerUnit !== undefined && data.pricePerUnit !== null && data.pricePerUnit !== ''
+          ? Number(data.pricePerUnit)
+          : 0);
+    this.sellingPrice = isNaN(sp) ? 0 : sp;
+    this.pricePerUnit = this.sellingPrice; // alias rétrocompat
     this.createdAt = data.createdAt instanceof Date ? data.createdAt : new Date(data.createdAt || Date.now());
     this.updatedAt = data.updatedAt instanceof Date ? data.updatedAt : new Date(data.updatedAt || Date.now());
   }
@@ -215,6 +220,15 @@ export class Recipe {
       producedUnit: json.producedUnit,
       preparationTime: json.preparationTime,
       instructions: json.instructions,
+      
+      // ✅ CRITIQUE : transmettre sellingPrice (sinon perte à chaque reconstruction)
+      sellingPrice: (json.sellingPrice !== undefined && json.sellingPrice !== null && json.sellingPrice !== '')
+        ? json.sellingPrice
+        : json.pricePerUnit,
+      
+      // ✅ Préserver assaisonnement
+      seasoningPercent: (json.seasoningPercent !== undefined ? json.seasoningPercent : 3),
+      
       createdAt: json.createdAt,
       updatedAt: json.updatedAt
     });

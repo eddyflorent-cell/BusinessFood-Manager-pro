@@ -2247,7 +2247,7 @@
             return all.map(c => '<option value="' + c + '"' + (c === selected ? ' selected' : '') + '>' + c + '</option>').join('');
         }
 
-        function handleEditRecipeCategoryChange(sel) {
+        window.handleEditRecipeCategoryChange = function(sel) {
             var newInput = document.getElementById('editRecipeCategoryNew');
             if (!newInput) return;
             if (sel.value === '__new__') {
@@ -2257,9 +2257,9 @@
                 newInput.style.display = 'none';
                 newInput.value = '';
             }
-        }
+        };
 
-        function handleCreateRecipeCategoryChange(sel) {
+        window.handleCreateRecipeCategoryChange = function(sel) {
             var newInput = document.getElementById('createRecipeCategoryNew');
             if (!newInput) return;
             if (sel.value === '__new__') {
@@ -2269,7 +2269,7 @@
                 newInput.style.display = 'none';
                 newInput.value = '';
             }
-        }
+        };
 
         function resolveRecipeCategory(formData) {
             // Si "__new__" sélectionné, utiliser le champ texte et mémoriser la catégorie
@@ -2437,7 +2437,7 @@
                                 <div style="display: flex; align-items: start; gap: var(--space-sm); padding: var(--space-sm); background: white; border-radius: var(--radius-sm);">
                                     <span style="font-size: 20px;">${rec.icon}</span>
                                     <div style="flex: 1;">
-                                        <strong style="color: var(--dark);">${rec.product || 'Général'}</strong>
+                                        <strong style="color: var(--dark);">${rec.productName}</strong>
                                         <p style="margin: 4px 0; font-size: 13px; color: #78350f;">${rec.message}</p>
                                         <p style="margin: 0; font-size: 12px; color: #78350f;"><strong>Action:</strong> ${rec.action}</p>
                                     </div>
@@ -2839,14 +2839,12 @@
         function renderRecipeCards(recipes) {
             const settings = appState.data.settings || { overheadCoefficient: 1.0, showDirectCost: true };
             
-            return recipes.map(recipe => {
-                const capacity = RecipeService.calculateCapacity(recipe, appState.data.ingredients);
+            return recipes.map(recipe => {                const capacity = RecipeService.calculateCapacity(recipe, appState.data.ingredients);
                 const cost = RecipeService.calculateCost(recipe, appState.data.ingredients);
                 const pricePerUnit = cost.totalCost / (recipe.producedQty || 1);
                 
                 // Calcul marge si prix de vente défini
-                const sellingPrice = recipe.sellingPrice || 0;
-                const marginAmount = sellingPrice - pricePerUnit;
+                const sellingPrice = recipe.sellingPrice || 0;                const marginAmount = sellingPrice - pricePerUnit;
                 const marginPercent = sellingPrice > 0 ? (marginAmount / sellingPrice * 100) : 0;
                 
                 // 🛡️ BADGES RENTABILITÉ (comme les packs)
@@ -7797,6 +7795,50 @@
                     </div>
                     
                     <!-- Future sections placeholder -->
+                    <!-- 💾 GESTION STOCKAGE -->
+                    <div style="background:white;padding:var(--space-xl);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);margin-bottom:var(--space-xl);">
+                        <h2 style="margin-bottom:var(--space-md);font-family:var(--font-display);">💾 Gestion du stockage</h2>
+                        <p style="color:var(--gray);margin-bottom:var(--space-lg);">
+                            L'application stocke vos données localement dans votre navigateur. Surveillez l'usage pour éviter la saturation.
+                        </p>
+                        
+                        <div id="storageQuotaDisplay" style="background:var(--light);padding:var(--space-lg);border-radius:var(--radius-md);margin-bottom:var(--space-md);">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-sm);">
+                                <span style="font-weight:600;color:var(--dark);">Utilisation du stockage</span>
+                                <span id="quotaPercent" style="font-size:18px;font-weight:800;color:var(--primary);">—%</span>
+                            </div>
+                            <div style="background:white;border-radius:8px;height:12px;overflow:hidden;margin-bottom:var(--space-sm);">
+                                <div id="quotaBar" style="height:12px;background:linear-gradient(90deg,var(--success),var(--warning));width:0%;transition:width .3s;"></div>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--gray);">
+                                <span id="quotaUsed">— KB utilisés</span>
+                                <span id="quotaLimit">— KB disponible</span>
+                            </div>
+                        </div>
+                        
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-md);">
+                            <button class="btn" style="background:var(--secondary);color:white;" onclick="updateStorageQuota()">
+                                🔄 Actualiser
+                            </button>
+                            <button class="btn" style="background:var(--warning);color:white;" onclick="cleanupStorage()">
+                                🧹 Nettoyer cache
+                            </button>
+                        </div>
+                        
+                        <div style="background:linear-gradient(135deg,#fff3e0,#ffe0b2);padding:var(--space-md);border-radius:var(--radius-md);margin-top:var(--space-md);border-left:4px solid #f57c00;">
+                            <div style="display:flex;align-items:flex-start;gap:var(--space-sm);">
+                                <span style="font-size:18px;">⚠️</span>
+                                <div style="flex:1;">
+                                    <strong style="color:#e65100;display:block;margin-bottom:4px;">Limite du stockage local</strong>
+                                    <p style="margin:0;font-size:12px;line-height:1.5;color:#bf360c;">
+                                        Les navigateurs limitent le stockage local à environ <strong>5 MB</strong>.
+                                        Si vous approchez cette limite, exportez vos données régulièrement et nettoyez le cache.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div style="background: var(--light); padding: var(--space-xl); border-radius: var(--radius-lg); text-align: center; color: var(--gray);">
                         <p>🚀 D'autres paramètres seront ajoutés prochainement</p>
                         <small>Thèmes, notifications, sauvegardes automatiques, etc.</small>
@@ -7876,6 +7918,46 @@
             
             showToast(`✅ Coefficient ${coefficient.toFixed(2)} enregistré !`, 'success');
         }
+
+        // ── Gestion stockage localStorage ──────────────────────
+        window.updateStorageQuota = function() {
+            const quota = StorageManager.getQuotaInfo();
+            const usedKB = (quota.usage / 1024).toFixed(1);
+            const limitKB = (quota.limit / 1024).toFixed(0);
+            const pct = quota.percentUsed;
+
+            document.getElementById('quotaPercent').textContent = pct + '%';
+            document.getElementById('quotaPercent').style.color = pct > 90 ? 'var(--danger)' : pct > 70 ? 'var(--warning)' : 'var(--success)';
+            document.getElementById('quotaBar').style.width = pct + '%';
+            document.getElementById('quotaBar').style.background = pct > 90 ? 'var(--danger)' : pct > 70 ? 'linear-gradient(90deg,var(--warning),var(--danger))' : 'linear-gradient(90deg,var(--success),var(--warning))';
+            document.getElementById('quotaUsed').textContent = usedKB + ' KB utilisés';
+            document.getElementById('quotaLimit').textContent = limitKB + ' KB total';
+        };
+
+        window.cleanupStorage = function() {
+            if (!confirm('Voulez-vous nettoyer le cache ?\n\nCela supprimera les anciennes sauvegardes mais conservera vos données actuelles.')) {
+                return;
+            }
+            try {
+                StorageManager.cleanup();
+                updateStorageQuota();
+                showToast('✅ Cache nettoyé avec succès', 'success');
+            } catch (e) {
+                showToast('❌ Erreur lors du nettoyage : ' + e.message, 'error');
+            }
+        };
+
+        // Auto-update quota when settings page opens
+        document.addEventListener('DOMContentLoaded', () => {
+            const originalShowPage = window.showPage;
+            window.showPage = function(page) {
+                originalShowPage(page);
+                if (page === 'settings') {
+                    setTimeout(updateStorageQuota, 100);
+                }
+            };
+        });
+        // ────────────────────────────────────────────────────────
         
         // ========================================
         // NAVIGATION
