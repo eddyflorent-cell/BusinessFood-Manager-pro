@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug localStorage BFM</title>
+</head>
+<body>
+    <h1>Debug localStorage BusinessFood Manager</h1>
+    <button onclick="checkStorage()">Analyser localStorage</button>
+    <pre id="output"></pre>
+    
+    <script>
+    function checkStorage() {
+        const data = localStorage.getItem('BFM_DATA');
+        if (!data) {
+            document.getElementById('output').textContent = 'Aucune donnée BFM trouvée';
+            return;
+        }
+        
+        try {
+            const parsed = JSON.parse(data);
+            const output = [];
+            
+            output.push('=== RECETTES ===');
+            if (parsed.recipes) {
+                parsed.recipes.forEach((r, i) => {
+                    output.push(`\n${i+1}. ${r.name}`);
+                    output.push(`   - ID: ${r.id}`);
+                    output.push(`   - sellingPrice: ${r.sellingPrice}`);
+                    output.push(`   - pricePerUnit: ${r.pricePerUnit}`);
+                });
+            }
+            
+            output.push('\n\n=== PACKS ===');
+            if (parsed.packs) {
+                parsed.packs.forEach((p, i) => {
+                    output.push(`\n${i+1}. ${p.name}`);
+                    output.push(`   - price: ${p.price}`);
+                    output.push(`   - items: ${p.items.length}`);
+                });
+            }
+            
+            document.getElementById('output').textContent = output.join('\n');
+        } catch (err) {
+            document.getElementById('output').textContent = 'Erreur parse: ' + err.message;
+        }
+    }
+    </script>
+</body>
+</html>

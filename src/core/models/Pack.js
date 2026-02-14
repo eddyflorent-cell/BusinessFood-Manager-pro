@@ -9,24 +9,29 @@
 export class PackItem {
   /**
    * @param {Object} data
-   * @param {string} data.productionId - ID de la production
-   * @param {string} data.productionName - Nom du produit
+   * @param {string} data.productId - ID du produit (recette ou production)
+   * @param {string} data.productType - Type: 'recipe' ou 'production'
+   * @param {string} data.productName - Nom du produit (optionnel, sera résolu)
    * @param {number} data.quantity - Quantité dans le pack
-   * @param {string} data.unit - Unité
    */
   constructor(data) {
-    this.productionId = data.productionId;
-    this.productionName = data.productionName;
-    this.quantity = Number(data.quantity);
-    this.unit = data.unit;
+    // Support ancien format (productionId/productionName) ET nouveau (productType/productId)
+    this.productType = data.productType || 'production';
+    this.productId = data.productId || data.productionId;
+    this.productName = data.productName || data.productionName;
+    this.quantity = Number(data.quantity) || 1;
+    
+    // Rétrocompat
+    this.productionId = this.productId;
+    this.productionName = this.productName;
   }
 
   toJSON() {
     return {
-      productionId: this.productionId,
-      productionName: this.productionName,
-      quantity: this.quantity,
-      unit: this.unit
+      productType: this.productType,
+      productId: this.productId,
+      productName: this.productName,
+      quantity: this.quantity
     };
   }
 
@@ -59,6 +64,31 @@ export class Pack {
     this.price = Number(data.price);
     this.active = Boolean(data.active);
     this.createdAt = data.createdAt instanceof Date ? data.createdAt : new Date(data.createdAt || Date.now());
+  }
+
+  /**
+   * Résout les noms de produits manquants dans les items
+   * @param {Recipe[]} recipes - Liste des recettes
+   * @param {Production[]} productions - Liste des productions
+   */
+  resolveProductNames(recipes, productions = []) {
+    this.items.forEach(item => {
+      if (!item.productName && item.productId) {
+        if (item.productType === 'recipe') {
+          const recipe = recipes.find(r => r.id === item.productId);
+          if (recipe) {
+            item.productName = recipe.name;
+            item.productionName = recipe.name; // Rétrocompat
+          }
+        } else if (item.productType === 'production') {
+          const prod = productions.find(p => p.id === item.productId);
+          if (prod) {
+            item.productName = prod.recipeName || prod.name || 'Production';
+            item.productionName = item.productName; // Rétrocompat
+          }
+        }
+      }
+    });
   }
 
   /**

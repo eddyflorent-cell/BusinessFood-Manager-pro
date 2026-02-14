@@ -954,6 +954,10 @@
             }
         }
     </style>
+    <!-- jsPDF pour export PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
 </head>
 <body>
     <div class="app-container">
@@ -1098,6 +1102,8 @@
         import { PlatformCommissionService } from './src/core/services/PlatformCommissionService.js?v=55.6';
         import { IngredientImporter } from './src/core/services/IngredientImporter.js?v=55.6';
         import { PackService } from './src/core/services/PackService.js?v=55.6';
+        import { AlertService, AlertType, AlertSeverity } from './src/core/services/AlertService.js?v=55.6';
+        import { ExportService } from './src/core/services/ExportService.js?v=55.6';
         import { StorageManager } from './src/core/data/StorageManager.js?v=55.6';
 
         
@@ -1754,9 +1760,11 @@
               <div class="db-act" onclick="showPage('production')"><div class="db-act-icon">⚙️</div><div class="db-act-lbl">Production</div></div>
               <div class="db-act" onclick="showPage('profitability')"><div class="db-act-icon">📊</div><div class="db-act-lbl">Rentabilité</div></div>
               <div class="db-act" onclick="showPage('packs')"><div class="db-act-icon">🎁</div><div class="db-act-lbl">Packs</div></div>
+              <div class="db-act" onclick="showPage('alerts')"><div class="db-act-icon">🔔</div><div class="db-act-lbl">Alertes</div></div>
               <div class="db-act" onclick="showPage('expenses')"><div class="db-act-icon">💸</div><div class="db-act-lbl">Dépenses</div></div>
               <div class="db-act" onclick="loadDemoWE()" style="border:2px dashed var(--primary);"><div class="db-act-icon">🧇</div><div class="db-act-lbl">Démo Salon</div></div>
               <div class="db-act" onclick="loadDemoBar()" style="border:2px dashed var(--warning);"><div class="db-act-icon">🍹</div><div class="db-act-lbl">Démo Bar</div></div>
+              <div class="db-act" onclick="exportStockValuationPDF()" style="border:2px solid var(--accent);background:var(--accent-soft);"><div class="db-act-icon">📤</div><div class="db-act-lbl">Export Bilan</div></div>
             </div>
             `;
 
@@ -1790,6 +1798,10 @@
                             <button class="btn" style="background: var(--danger); color: white;" onclick="confirmDeleteAllIngredients()" title="Effacer tous les ingrédients">
                                 <span>🗑️</span>
                                 <span>Effacer Tout</span>
+                            </button>
+                            <button class="btn" style="background: var(--danger); color: white;" onclick="exportInventoryPDF()" title="Exporter l'inventaire en PDF">
+                                <span>📤</span>
+                                <span>Export PDF</span>
                             </button>
                             <button class="btn" style="background: var(--info); color: white;" onclick="downloadIngredientCSVTemplate()" title="Télécharger le modèle CSV vierge">
                                 <span>📄</span>
@@ -2384,6 +2396,11 @@
                         <h1 class="page-title">📊 Analyse Rentabilité</h1>
                         <p class="page-subtitle">Identifiez les produits rentables et ceux à optimiser</p>
                     </div>
+                    <div>
+                        <button class="btn btn-primary" onclick="exportProfitabilityPDF()">
+                            📤 Export PDF
+                        </button>
+                    </div>
                 </div>
                 
                 <!-- Statistiques globales -->
@@ -2910,6 +2927,7 @@
                             <button class="action-btn" onclick="showEditRecipeModal('${recipe.id}')" title="Modifier">✏️</button>
                             <button class="action-btn" onclick="showProduceRecipeModal('${recipe.id}')" title="Produire">⚙️</button>
                             <button class="action-btn" onclick="duplicateRecipe('${recipe.id}')" title="Dupliquer">📋</button>
+                            <button class="action-btn" onclick="exportRecipePDF('${recipe.id}')" title="Export PDF">📤</button>
                             <button class="action-btn" onclick="deleteRecipe('${recipe.id}')" title="Supprimer">🗑️</button>
                         </div>
                     </div>
@@ -4797,9 +4815,23 @@
                                         <div style="margin-top: var(--space-md); padding-top: var(--space-md); border-top: 1px solid var(--light);">
                                             <strong>Contenu :</strong>
                                             <ul style="margin: var(--space-sm) 0 0 var(--space-md); padding: 0;">
-                                                ${pack.items ? pack.items.map(item => `
-                                                    <li>${item.quantity} ${item.unit} ${item.productionName}</li>
-                                                `).join('') : ''}
+                                                ${pack.items ? pack.items.map(item => {
+                                                    // Chercher le nom du produit
+                                                    let productName = item.productName || 'Produit inconnu';
+                                                    
+                                                    // Si productName n'est pas défini, chercher dans les recettes/productions
+                                                    if (!item.productName && item.productId) {
+                                                        if (item.productType === 'recipe') {
+                                                            const recipe = appState.data.recipes.find(r => r.id === item.productId);
+                                                            if (recipe) productName = recipe.name;
+                                                        } else if (item.productType === 'production') {
+                                                            const prod = appState.data.productions.find(p => p.id === item.productId);
+                                                            if (prod) productName = prod.recipeName || prod.name || 'Production';
+                                                        }
+                                                    }
+                                                    
+                                                    return `<li>${item.quantity}× ${productName}</li>`;
+                                                }).join('') : ''}
                                             </ul>
                                         </div>
                                         <div class="ingredient-actions">
@@ -7998,6 +8030,9 @@
                 case 'packs':
                     renderPacksPage();
                     break;
+                case 'alerts':
+                    renderAlertsPage();
+                    break;
                 case 'profitability':
                     renderProfitabilityPage();
                     break;
@@ -8115,6 +8150,10 @@
                 const convertedIngredients = demoBarLounge.ingredients.map(ing => Ingredient.fromJSON(ing));
                 const convertedRecipes = demoBarLounge.recipes.map(rec => Recipe.fromJSON(rec));
                 const convertedProductions = demoBarLounge.productions.map(prod => Production.fromJSON(prod));
+                const convertedPacks = (demoBarLounge.packs || []).map(pack => Pack.fromJSON(pack));
+                
+                // Résoudre les noms de produits dans les packs
+                convertedPacks.forEach(pack => pack.resolveProductNames(convertedRecipes, convertedProductions));
 
                 appState.data = {
                     ingredients: convertedIngredients,
@@ -8129,7 +8168,7 @@
                     movements: demoBarLounge.movements || [],
                     vendors: demoBarLounge.vendors || [],
                     staff: demoBarLounge.staff || [],
-                    packs: demoBarLounge.packs || [],
+                    packs: convertedPacks,
                     settings: demoBarLounge.settings || appState.data.settings || {}
                 };
 
@@ -8759,6 +8798,187 @@
             return String(v);
         }
 
+        // ========================================
+        // MODULE ALERTES
+        // ========================================
+        
+        function renderAlertsPage() {
+            const ingredients = appState.data.ingredients || [];
+            const settings = {
+                defaultStockThreshold: appState.data.settings?.defaultStockThreshold || 1000,
+                dlcWarningDays: appState.data.settings?.dlcWarningDays || 7,
+                dlcCriticalDays: appState.data.settings?.dlcCriticalDays || 3,
+                enableNotifications: appState.data.settings?.enableNotifications !== false
+            };
+            
+            // Récupérer alertes actives
+            const alertsData = AlertService.getActiveAlerts(ingredients, settings);
+            const stats = AlertService.getStatistics(alertsData.all);
+            
+            // Filtrage
+            const urlParams = new URLSearchParams(window.location.hash.split('?')[1] || '');
+            const filterType = urlParams.get('filter') || 'all';
+            
+            let filteredAlerts = alertsData.all;
+            if (filterType === 'stock') {
+                filteredAlerts = alertsData.stock;
+            } else if (filterType === 'dlc') {
+                filteredAlerts = alertsData.dlc;
+            }
+            
+            const html = `
+                <div class="page-container">
+                    <h1 class="page-title">🔔 Alertes & Notifications</h1>
+                    <p style="color:var(--muted);margin-bottom:var(--space-lg);">Surveillez votre stock et les dates de péremption en temps réel</p>
+                    
+                    <!-- Statistiques -->
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:var(--space-md);margin-bottom:var(--space-lg);">
+                        <div style="background:linear-gradient(135deg,#fee2e2,#fecaca);padding:var(--space-md);border-radius:var(--radius-lg);border-left:4px solid var(--danger);">
+                            <div style="font-size:12px;text-transform:uppercase;color:var(--danger);margin-bottom:4px;font-weight:600;">Critiques</div>
+                            <div style="font-size:28px;font-weight:700;color:var(--danger);">${stats.bySeverity.critical}</div>
+                        </div>
+                        <div style="background:linear-gradient(135deg,#fef3c7,#fde68a);padding:var(--space-md);border-radius:var(--radius-lg);border-left:4px solid var(--warning);">
+                            <div style="font-size:12px;text-transform:uppercase;color:var(--warning);margin-bottom:4px;font-weight:600;">Avertissements</div>
+                            <div style="font-size:28px;font-weight:700;color:var(--warning);">${stats.bySeverity.warning}</div>
+                        </div>
+                        <div style="background:linear-gradient(135deg,#e0f2fe,#bae6fd);padding:var(--space-md);border-radius:var(--radius-lg);border-left:4px solid var(--primary);">
+                            <div style="font-size:12px;text-transform:uppercase;color:var(--primary);margin-bottom:4px;font-weight:600;">Stock faible</div>
+                            <div style="font-size:28px;font-weight:700;color:var(--primary);">${stats.byType.stock}</div>
+                        </div>
+                        <div style="background:linear-gradient(135deg,#f3e8ff,#e9d5ff);padding:var(--space-md);border-radius:var(--radius-lg);border-left:4px solid #9333ea;">
+                            <div style="font-size:12px;text-transform:uppercase;color:#9333ea;margin-bottom:4px;font-weight:600;">DLC proches</div>
+                            <div style="font-size:28px;font-weight:700;color:#9333ea;">${stats.byType.dlc}</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Filtres & Actions -->
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-lg);flex-wrap:wrap;gap:var(--space-sm);">
+                        <div style="display:flex;gap:var(--space-sm);">
+                            <button class="btn ${filterType === 'all' ? 'btn-primary' : ''}" onclick="showPage('alerts')">
+                                Toutes (${alertsData.all.length})
+                            </button>
+                            <button class="btn ${filterType === 'stock' ? 'btn-primary' : ''}" onclick="showPage('alerts?filter=stock')">
+                                📦 Stock (${alertsData.stock.length})
+                            </button>
+                            <button class="btn ${filterType === 'dlc' ? 'btn-primary' : ''}" onclick="showPage('alerts?filter=dlc')">
+                                📅 DLC (${alertsData.dlc.length})
+                            </button>
+                        </div>
+                        <div style="display:flex;gap:var(--space-sm);">
+                            ${settings.enableNotifications ? `
+                                <button class="btn" onclick="requestNotificationPermission()">
+                                    🔔 Activer notifications
+                                </button>
+                            ` : ''}
+                            <button class="btn" onclick="showPage('settings')">
+                                ⚙️ Paramètres
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Liste des alertes -->
+                    ${filteredAlerts.length === 0 ? `
+                        <div style="text-align:center;padding:var(--space-xl);background:var(--light);border-radius:var(--radius-lg);">
+                            <div style="font-size:48px;margin-bottom:var(--space-md);">✅</div>
+                            <h3>Aucune alerte active</h3>
+                            <p style="color:var(--muted);">Tous vos stocks et DLC sont sous contrôle</p>
+                        </div>
+                    ` : `
+                        <div style="display:flex;flex-direction:column;gap:var(--space-md);">
+                            ${filteredAlerts.map(alert => renderAlertCard(alert)).join('')}
+                        </div>
+                    `}
+                </div>
+            `;
+            
+            document.getElementById('mainContent').innerHTML = html;
+            updateTranslations();
+        }
+        
+        function renderAlertCard(alert) {
+            const severityColors = {
+                critical: { bg: '#fee2e2', border: '#dc2626', text: '#991b1b' },
+                warning: { bg: '#fef3c7', border: '#f59e0b', text: '#92400e' },
+                info: { bg: '#e0f2fe', border: '#0284c7', text: '#075985' }
+            };
+            
+            const colors = severityColors[alert.severity] || severityColors.info;
+            const icon = alert.severity === 'critical' ? '🔴' : alert.severity === 'warning' ? '🟡' : 'ℹ️';
+            
+            return `
+                <div style="background:${colors.bg};border-left:4px solid ${colors.border};padding:var(--space-md);border-radius:var(--radius-md);">
+                    <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:var(--space-sm);">
+                        <div style="flex:1;">
+                            <div style="display:flex;align-items:center;gap:var(--space-sm);margin-bottom:4px;">
+                                <span style="font-size:20px;">${icon}</span>
+                                <strong style="color:${colors.text};font-size:16px;">${alert.message}</strong>
+                            </div>
+                            <p style="margin:4px 0;color:${colors.text};font-size:14px;">${alert.details}</p>
+                            ${alert.lotNumber ? `<p style="margin:4px 0;color:${colors.text};font-size:12px;opacity:0.8;">Lot : ${alert.lotNumber}</p>` : ''}
+                        </div>
+                        <div style="display:flex;gap:var(--space-xs);">
+                            ${alert.type.includes('stock') ? `
+                                <button class="btn btn-sm" onclick="showAddLotModal('${alert.ingredientId}')" title="Ajouter un lot">
+                                    ➕
+                                </button>
+                            ` : ''}
+                            ${alert.type.includes('dlc') && alert.lotId ? `
+                                <button class="btn btn-sm" style="background:var(--danger);color:white;" onclick="handleExpiredLot('${alert.ingredientId}', '${alert.lotId}')" title="Marquer périmé">
+                                    🗑️
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                    <div style="font-size:11px;color:${colors.text};opacity:0.7;">
+                        ${new Date(alert.createdAt).toLocaleString('fr-FR')}
+                    </div>
+                </div>
+            `;
+        }
+        
+        window.requestNotificationPermission = async function() {
+            if (!('Notification' in window)) {
+                showToast('❌ Notifications non supportées par ce navigateur', 'error');
+                return;
+            }
+            
+            if (Notification.permission === 'granted') {
+                showToast('✅ Notifications déjà activées', 'success');
+                return;
+            }
+            
+            const permission = await Notification.requestPermission();
+            if (permission === 'granted') {
+                showToast('✅ Notifications activées', 'success');
+                // Envoyer notification de test
+                new Notification('BusinessFood Manager', {
+                    body: 'Les notifications sont maintenant activées !',
+                    icon: '/icon.png'
+                });
+            } else {
+                showToast('❌ Permission refusée', 'error');
+            }
+        };
+        
+        window.handleExpiredLot = function(ingredientId, lotId) {
+            if (!confirm('Marquer ce lot comme périmé et le déduire du stock ?')) return;
+            
+            const ingredient = appState.data.ingredients.find(i => i.id === ingredientId);
+            if (!ingredient) return;
+            
+            const lot = ingredient.lots.find(l => l.id === lotId);
+            if (!lot) return;
+            
+            // Marquer comme épuisé
+            lot.epuise = true;
+            lot.quantite = 0;
+            
+            saveData();
+            showToast('✅ Lot marqué comme périmé', 'success');
+            renderAlertsPage();
+        };
+
+
         function renderExpensesPage() {
             const expenses = (appState.data.expenses || []).sort((a,b) => new Date(b.date) - new Date(a.date));
             const now = new Date();
@@ -9350,6 +9570,87 @@
 
         // Start app
         initApp();
+        // ========================================
+        // FONCTIONS EXPORT PDF
+        // ========================================
+        
+        window.exportInventoryPDF = async function() {
+            try {
+                showToast('📄 Génération du PDF...', 'info');
+                
+                const ingredients = appState.data.ingredients || [];
+                const settings = {
+                    businessName: appState.data.settings?.businessName || 'BusinessFood Manager'
+                };
+                
+                await ExportService.exportInventory(ingredients, settings);
+                showToast('✅ Inventaire exporté avec succès', 'success');
+            } catch (error) {
+                console.error('Export error:', error);
+                showToast('❌ Erreur lors de l\'export : ' + error.message, 'error');
+            }
+        };
+        
+        window.exportRecipePDF = async function(recipeId) {
+            try {
+                showToast('📄 Génération du PDF...', 'info');
+                
+                const recipe = appState.data.recipes.find(r => r.id === recipeId);
+                if (!recipe) {
+                    showToast('❌ Recette introuvable', 'error');
+                    return;
+                }
+                
+                const ingredients = appState.data.ingredients || [];
+                const settings = {
+                    businessName: appState.data.settings?.businessName || 'BusinessFood Manager'
+                };
+                
+                await ExportService.exportRecipe(recipe, ingredients, settings);
+                showToast('✅ Fiche recette exportée avec succès', 'success');
+            } catch (error) {
+                console.error('Export error:', error);
+                showToast('❌ Erreur lors de l\'export : ' + error.message, 'error');
+            }
+        };
+        
+        window.exportProfitabilityPDF = async function() {
+            try {
+                showToast('📄 Génération du PDF...', 'info');
+                
+                const recipes = appState.data.recipes || [];
+                const packs = appState.data.packs || [];
+                const ingredients = appState.data.ingredients || [];
+                const settings = {
+                    businessName: appState.data.settings?.businessName || 'BusinessFood Manager'
+                };
+                
+                await ExportService.exportProfitabilityReport(recipes, packs, ingredients, settings);
+                showToast('✅ Rapport rentabilité exporté avec succès', 'success');
+            } catch (error) {
+                console.error('Export error:', error);
+                showToast('❌ Erreur lors de l\'export : ' + error.message, 'error');
+            }
+        };
+        
+        window.exportStockValuationPDF = async function() {
+            try {
+                showToast('📄 Génération du PDF...', 'info');
+                
+                const ingredients = appState.data.ingredients || [];
+                const productions = appState.data.productions || [];
+                const settings = {
+                    businessName: appState.data.settings?.businessName || 'BusinessFood Manager'
+                };
+                
+                await ExportService.exportStockValuation(ingredients, productions, settings);
+                showToast('✅ Bilan valorisation exporté avec succès', 'success');
+            } catch (error) {
+                console.error('Export error:', error);
+                showToast('❌ Erreur lors de l\'export : ' + error.message, 'error');
+            }
+        };
+
     </script>
 </body>
 </html>

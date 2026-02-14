@@ -1065,5 +1065,67 @@ export const demoBarLounge = {
   ],
 
   movements: [],
-  packs: []
+  packs: [
+    // ── PACK 1 : APÉRO COCKTAILS CLASSIQUES ───────────────────────
+    {
+      id: 'pack_apero_classic',
+      name: 'Apéro Cocktails Classiques (4 pers.)',
+      description: 'Sélection de 4 cocktails incontournables pour vos soirées entre amis',
+      price: 40.00,
+      active: true,
+      items: [
+        { productType: 'recipe', productId: 'rec_mojito', productName: 'Mojito (verre 30cl)', quantity: 1 },
+        { productType: 'recipe', productId: 'rec_cosmopolitan', productName: 'Cosmopolitan (verre 20cl)', quantity: 1 },
+        { productType: 'recipe', productId: 'rec_gin_tonic', productName: 'Gin Tonic Premium (verre 35cl)', quantity: 1 },
+        { productType: 'recipe', productId: 'rec_old_fashioned', productName: 'Old Fashioned (verre 20cl)', quantity: 1 }
+      ],
+      createdAt: new Date('2026-02-10').toISOString(),
+      updatedAt: new Date('2026-02-10').toISOString()
+    },
+
+    // ── PACK 2 : SOIRÉE MOJITOS (Groupe) ──────────────────────────
+    {
+      id: 'pack_mojito_party',
+      name: 'Pack Mojito Party (6 mojitos)',
+      description: 'Pour les fans du cocktail cubain — économisez 10% sur la commande groupée',
+      price: 54.00,
+      active: true,
+      items: [
+        { productType: 'recipe', productId: 'rec_mojito', productName: 'Mojito (verre 30cl)', quantity: 6 }
+      ],
+      createdAt: new Date('2026-02-10').toISOString(),
+      updatedAt: new Date('2026-02-10').toISOString()
+    },
+
+    // ── PACK 3 : DUO ROMANCE ──────────────────────────────────────
+    {
+      id: 'pack_duo_romance',
+      name: 'Duo Romance (2 cocktails + 1 Kir Royal)',
+      description: 'Formule spéciale couples : 2 cocktails signature + 1 Kir Royal offert',
+      price: 28.00,
+      active: true,
+      items: [
+        { productType: 'recipe', productId: 'rec_cosmopolitan', productName: 'Cosmopolitan (verre 20cl)', quantity: 1 },
+        { productType: 'recipe', productId: 'rec_tequila_sunrise', productName: 'Tequila Sunrise (verre 30cl)', quantity: 1 },
+        { productType: 'recipe', productId: 'rec_kir_royal', productName: 'Kir Royal (coupe 15cl)', quantity: 1 }
+      ],
+      createdAt: new Date('2026-02-10').toISOString(),
+      updatedAt: new Date('2026-02-10').toISOString()
+    },
+
+    // ── PACK 4 : SOFT DETOX (Sans alcool) ─────────────────────────
+    {
+      id: 'pack_soft_detox',
+      name: 'Pack Soft Detox (2 virg. mojito + 1 smoothie)',
+      description: 'Formule bien-être sans alcool — Virgin Mojitos + Smoothie mangue',
+      price: 18.00,
+      active: true,
+      items: [
+        { productType: 'recipe', productId: 'rec_virgin_mojito', productName: 'Virgin Mojito (verre 30cl)', quantity: 2 },
+        { productType: 'recipe', productId: 'rec_smoothie_mango', productName: 'Smoothie Mangue-Ananas (verre 40cl)', quantity: 1 }
+      ],
+      createdAt: new Date('2026-02-10').toISOString(),
+      updatedAt: new Date('2026-02-10').toISOString()
+    }
+  ]
 };
