@@ -1070,7 +1070,7 @@
         <aside class="sidebar">
             <div class="logo">
                 <div class="logo-icon">🍞</div>
-                <span class="logo-text" data-i18n="app_name">BUSINESSFOOD</span>
+                <span class="logo-text" data-i18n="app_name">BFM<span style="font-size: 10px; display: block; opacity: 0.7;">by FGS</span></span>
             </div>
 
             <nav>
@@ -1156,6 +1156,10 @@
         <header class="header">
             <div class="header-left">
                 <div class="search-bar">
+                <button onclick="if(window.TutorialService) TutorialService.restart(); else alert('Tutoriel en cours de chargement...');" class="btn" style="background: var(--info); color: white; margin-left: 10px;" title="Relancer le tutoriel">
+                    <span style="font-size: 20px;">?</span> Aide
+                </button>
+
                     <input type="text" data-i18n-placeholder="search_placeholder" placeholder="Rechercher...">
                 </div>
             </div>
@@ -1184,8 +1188,8 @@
 
                 <!-- User Menu -->
                 <div class="user-menu">
-                    <div class="user-avatar">FG</div>
-                    <span class="user-name">Fotsi</span>
+                    <div class="user-avatar">FGS</div>
+                    <span class="user-name">Fotsi Global Services</span>
                 </div>
             </div>
         </header>
@@ -1249,7 +1253,7 @@
         // i18n Translations
         const translations = {
             fr: {
-                app_name: 'BUSINESSFOOD',
+                app_name: 'BusinessFood Manager',
                 dashboard: 'Tableau de bord',
                 ingredients: 'Ingrédients',
                 recipes: 'Recettes',
@@ -1274,7 +1278,7 @@
                 add_expense: 'Ajouter dépense'
             },
             en: {
-                app_name: 'BUSINESSFOOD',
+                app_name: 'BusinessFood Manager',
                 dashboard: 'Dashboard',
                 ingredients: 'Ingredients',
                 recipes: 'Recipes',
@@ -9762,41 +9766,13 @@
         // ========================================
         
         // Mode sombre uniquement
-        loadThemePreference();
+        
 
         // ========================================
         // MODE SOMBRE
         // ========================================
         
-        // Toggle mode sombre
-        window.toggleDarkMode = function(enable) {
-            const root = document.documentElement;
-            
-            if (enable) {
-                root.setAttribute('data-theme', 'dark');
-                localStorage.setItem('BFM_THEME', 'dark');
-            } else {
-                root.removeAttribute('data-theme');
-                localStorage.setItem('BFM_THEME', 'light');
-            }
-            
-            // Mettre à jour le toggle dans les settings si affiché
-            const toggle = document.querySelector('input[name="darkMode"]');
-            if (toggle) {
-                toggle.checked = enable;
-            }
-        };
         
-        // Charger préférence theme au démarrage
-        window.loadThemePreference = function() {
-            const savedTheme = localStorage.getItem('BFM_THEME');
-            if (savedTheme === 'dark') {
-                toggleDarkMode(true);
-            }
-        };
-        
-        // Charger au démarrage
-        loadThemePreference();
 
         // ========================================
         // PERFORMANCE & UX UTILITIES
@@ -9968,6 +9944,251 @@
                 localStorage.setItem('BFM_LAST_CLEANUP', now.toString());
             }, 5000); // Attendre 5s après chargement
         }
+
+        // ========================================
+        // TUTORIEL INTÉGRÉ INTERACTIF
+        // ========================================
+        
+        window.TutorialService = {
+            steps: [
+                {
+                    id: 'welcome',
+                    title: '👋 Bienvenue !',
+                    message: 'Bienvenue dans <strong>BusinessFood Manager</strong>, solution métier F&B by <strong>Fotsi Global Services (FGS)</strong>.<br><br>Cette application professionnelle vous aide à gérer votre restaurant : stocks, recettes, coûts et rentabilité.<br><br><strong>Voulez-vous faire le tour guidé ?</strong> (2 minutes)',
+                    buttons: ['Oui, commencer', 'Plus tard']
+                },
+                {
+                    id: 'demo',
+                    title: '🎯 Commencez avec un exemple',
+                    message: 'Pour découvrir l\'application, chargez une démo pré-remplie :<br><br>🧇 <strong>Démo Salon</strong> : Pâtisserie/Traiteur<br>🍹 <strong>Démo Bar</strong> : Bar à cocktails<br><br>Cliquez sur un des deux boutons orange.',
+                    target: '.demo-buttons',
+                    position: 'bottom'
+                },
+                {
+                    id: 'sidebar',
+                    title: '📂 Menu de navigation',
+                    message: 'Sur la gauche, le menu vous permet d\'accéder aux différentes sections :<br><br>• <strong>Tableau de bord</strong> : Vue d\'ensemble<br>• <strong>Ingrédients</strong> : Gérer votre stock<br>• <strong>Recettes</strong> : Vos plats et préparations<br>• <strong>Rentabilité</strong> : Voir vos marges',
+                    target: '#sidebar',
+                    position: 'right'
+                },
+                {
+                    id: 'ingredients',
+                    title: '📦 Gérer vos ingrédients',
+                    message: 'Ici vous ajoutez vos produits (farine, sucre, etc.).<br><br>Pour chaque ingrédient :<br>• Combien il en reste<br>• Date de péremption<br>• Prix d\'achat<br><br>Cliquez sur <strong>"+ Nouvel ingrédient"</strong> pour ajouter un produit.',
+                    page: 'ingredients',
+                    target: '.btn-primary',
+                    position: 'bottom'
+                },
+                {
+                    id: 'recipes',
+                    title: '📋 Créer vos recettes',
+                    message: 'Créez vos fiches techniques de cuisine.<br><br>L\'application <strong>calcule automatiquement</strong> :<br>• Le coût de revient<br>• Votre marge de bénéfice<br><br>Ajoutez simplement les ingrédients et leurs quantités !',
+                    page: 'recipes',
+                    target: '.btn-primary',
+                    position: 'bottom'
+                },
+                {
+                    id: 'profitability',
+                    title: '💰 Analyser votre rentabilité',
+                    message: 'Cette page vous montre si vos plats sont <strong>rentables</strong> :<br><br>🟢 <strong>Excellent</strong> : Marge > 50%<br>🟡 <strong>Correct</strong> : Marge 25-50%<br>🔴 <strong>Faible</strong> : Marge < 25%<br><br>Si un plat est en perte, augmentez le prix ou réduisez les ingrédients.',
+                    page: 'profitability',
+                    position: 'center'
+                },
+                {
+                    id: 'alerts',
+                    title: '🔔 Alertes automatiques',
+                    message: 'L\'application surveille pour vous :<br><br>• Stock faible → Il faut recommander<br>• Date proche de péremption → À utiliser vite<br><br>Vous voyez les alertes sur cette page.',
+                    page: 'alerts',
+                    position: 'center'
+                },
+                {
+                    id: 'export',
+                    title: '📤 Imprimer vos documents',
+                    message: 'Générez des PDF professionnels :<br><br>• Inventaire stock<br>• Fiches recettes (pour afficher en cuisine)<br>• Rapport de rentabilité<br><br>Cherchez les boutons <strong>"📤 Export PDF"</strong>',
+                    position: 'center'
+                },
+                {
+                    id: 'save',
+                    title: '💾 Sauvegarde automatique',
+                    message: 'Vos données sont <strong>sauvegardées automatiquement</strong> dans votre navigateur.<br><br>⚠️ <strong>Important</strong> : Exportez régulièrement vos données (menu Paramètres) pour éviter toute perte.',
+                    position: 'center'
+                },
+                {
+                    id: 'shortcuts',
+                    title: '⌨️ Raccourcis pratiques',
+                    message: 'Pour aller plus vite :<br><br>• <strong>Ctrl+S</strong> : Sauvegarder<br>• <strong>Esc</strong> : Fermer une fenêtre<br>• <strong>Ctrl+F</strong> : Chercher<br><br>Vous êtes prêt ! 🚀',
+                    position: 'center'
+                },
+                {
+                    id: 'finish',
+                    title: '✅ Tutoriel terminé !',
+                    message: 'Vous connaissez maintenant les bases.<br><br>N\'hésitez pas à explorer l\'application. Tout est intuitif et vous ne pouvez rien casser !<br><br><strong>Besoin d\'aide ?</strong> Cliquez sur le point d\'interrogation <strong>?</strong> en haut à droite.',
+                    buttons: ['Commencer à utiliser l\'application']
+                }
+            ],
+            
+            currentStep: 0,
+            
+            start() {
+                const hasSeenTutorial = localStorage.getItem('BFM_TUTORIAL_SEEN');
+                if (!hasSeenTutorial) {
+                    this.currentStep = 0;
+                    this.showStep();
+                }
+            },
+            
+            showStep() {
+                const step = this.steps[this.currentStep];
+                if (!step) return;
+                
+                // Naviguer vers la page si nécessaire
+                if (step.page && window.navigateTo) {
+                    window.navigateTo(step.page);
+                    setTimeout(() => this.renderStep(step), 300);
+                } else {
+                    this.renderStep(step);
+                }
+            },
+            
+            renderStep(step) {
+                // Supprimer ancien tutoriel
+                const existing = document.getElementById('tutorial-overlay');
+                if (existing) existing.remove();
+                
+                // Créer overlay
+                const overlay = document.createElement('div');
+                overlay.id = 'tutorial-overlay';
+                overlay.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: rgba(0, 0, 0, 0.7);
+                    z-index: 9998;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                `;
+                
+                // Créer bulle
+                const bubble = document.createElement('div');
+                bubble.style.cssText = `
+                    background: white;
+                    padding: 30px;
+                    border-radius: 12px;
+                    max-width: 500px;
+                    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+                    position: relative;
+                    z-index: 9999;
+                    animation: slideInModal 0.3s ease-out;
+                `;
+                
+                // Titre
+                const title = document.createElement('h2');
+                title.style.cssText = 'margin: 0 0 15px 0; color: #FF6B35; font-size: 24px;';
+                title.innerHTML = step.title;
+                
+                // Message
+                const message = document.createElement('p');
+                message.style.cssText = 'margin: 0 0 20px 0; line-height: 1.6; font-size: 16px;';
+                message.innerHTML = step.message;
+                
+                // Boutons
+                const buttonsDiv = document.createElement('div');
+                buttonsDiv.style.cssText = 'display: flex; gap: 10px; justify-content: flex-end;';
+                
+                if (step.buttons) {
+                    step.buttons.forEach((btnText, index) => {
+                        const btn = document.createElement('button');
+                        btn.textContent = btnText;
+                        btn.className = 'btn btn-primary';
+                        btn.onclick = () => {
+                            if (index === 0) {
+                                this.next();
+                            } else {
+                                this.skip();
+                            }
+                        };
+                        buttonsDiv.appendChild(btn);
+                    });
+                } else {
+                    // Boutons par défaut
+                    const skipBtn = document.createElement('button');
+                    skipBtn.textContent = 'Passer';
+                    skipBtn.className = 'btn';
+                    skipBtn.onclick = () => this.skip();
+                    
+                    const nextBtn = document.createElement('button');
+                    nextBtn.textContent = this.currentStep === this.steps.length - 1 ? 'Terminer' : 'Suivant';
+                    nextBtn.className = 'btn btn-primary';
+                    nextBtn.onclick = () => this.next();
+                    
+                    buttonsDiv.appendChild(skipBtn);
+                    buttonsDiv.appendChild(nextBtn);
+                }
+                
+                // Indicateur progression
+                const progress = document.createElement('div');
+                progress.style.cssText = 'margin-top: 20px; text-align: center; color: #999; font-size: 14px;';
+                progress.textContent = `${this.currentStep + 1} / ${this.steps.length}`;
+                
+                bubble.appendChild(title);
+                bubble.appendChild(message);
+                bubble.appendChild(buttonsDiv);
+                bubble.appendChild(progress);
+                overlay.appendChild(bubble);
+                
+                document.body.appendChild(overlay);
+                
+                // Mettre en surbrillance l'élément cible si défini
+                if (step.target) {
+                    const target = document.querySelector(step.target);
+                    if (target) {
+                        target.style.position = 'relative';
+                        target.style.zIndex = '10000';
+                        target.style.boxShadow = '0 0 0 4px #FF6B35, 0 0 20px rgba(255, 107, 53, 0.5)';
+                    }
+                }
+            },
+            
+            next() {
+                this.currentStep++;
+                if (this.currentStep >= this.steps.length) {
+                    this.finish();
+                } else {
+                    this.showStep();
+                }
+            },
+            
+            skip() {
+                this.finish();
+            },
+            
+            finish() {
+                const overlay = document.getElementById('tutorial-overlay');
+                if (overlay) overlay.remove();
+                
+                // Marquer comme vu
+                localStorage.setItem('BFM_TUTORIAL_SEEN', 'true');
+                
+                // Retourner au dashboard
+                if (window.navigateTo) {
+                    window.navigateTo('dashboard');
+                }
+            },
+            
+            restart() {
+                localStorage.removeItem('BFM_TUTORIAL_SEEN');
+                this.currentStep = 0;
+                this.start();
+            }
+        };
+        
+        // Lancer au chargement (après 1 seconde pour laisser l'app s'initialiser)
+        setTimeout(() => {
+            TutorialService.start();
+        }, 1000);
 
     </script>
 </body>
