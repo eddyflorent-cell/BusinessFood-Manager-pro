@@ -337,41 +337,89 @@ export class ExportService {
     
     let y = 45;
     
-    // Analyser tous les produits
-    const ProfitabilityService = window.ProfitabilityService;
+    // Analyser tous les produits SANS RecipeService
     let analysis = [];
     
-    if (ProfitabilityService) {
-      // Recettes
-      recipes.forEach(recipe => {
-        const result = ProfitabilityService.analyzeRecipe(recipe, ingredients);
-        if (result) {
-          analysis.push({
-            name: recipe.name,
-            type: 'Recette',
-            cost: result.cost,
-            price: result.price,
-            margin: result.marginPercent,
-            status: result.status
-          });
+    // Fonction helper pour calculer coût recette
+    const calculateRecipeCost = (recipe) => {
+      let totalCost = 0;
+      
+      if (!recipe.ingredients || recipe.ingredients.length === 0) return 0;
+      
+      recipe.ingredients.forEach(recipeIng => {
+        const ingredient = ingredients.find(ing => ing.id === recipeIng.ingredientId);
+        if (!ingredient) return;
+        
+        const pricePerUnit = ingredient.getPricePerBaseUnit ? ingredient.getPricePerBaseUnit() : 0;
+        
+        // Convertir quantité en baseUnit
+        let qtyInBaseUnit = recipeIng.quantity;
+        if (recipeIng.unit !== ingredient.baseUnit) {
+          // Conversions courantes
+          if (ingredient.baseUnit === 'g' && recipeIng.unit === 'kg') qtyInBaseUnit *= 1000;
+          if (ingredient.baseUnit === 'ml' && recipeIng.unit === 'l') qtyInBaseUnit *= 1000;
+        }
+        
+        totalCost += qtyInBaseUnit * pricePerUnit;
+      });
+      
+      const producedQty = recipe.producedQty || 1;
+      return totalCost / producedQty;
+    };
+    
+    // Analyser recettes
+    recipes.forEach(recipe => {
+      if (!recipe.sellingPrice || recipe.sellingPrice <= 0) return;
+      
+      const costPerUnit = calculateRecipeCost(recipe);
+      if (costPerUnit > 0) {
+        const margin = ((recipe.sellingPrice - costPerUnit) / recipe.sellingPrice) * 100;
+        
+        analysis.push({
+          name: recipe.name,
+          type: 'Recette',
+          cost: costPerUnit,
+          price: recipe.sellingPrice,
+          margin: margin,
+          status: margin >= 50 ? 'Excellent' : margin >= 25 ? 'Correct' : margin >= 0 ? 'Faible' : 'Perte'
+        });
+      }
+    });
+    
+    // Analyser packs
+    packs.forEach(pack => {
+      if (!pack.price || pack.price <= 0 || !pack.items || pack.items.length === 0) return;
+      
+      let totalCost = 0;
+      let valid = true;
+      
+      pack.items.forEach(item => {
+        const recipe = recipes.find(r => r.id === item.productId);
+        if (recipe) {
+          const recipeCost = calculateRecipeCost(recipe);
+          if (recipeCost > 0) {
+            totalCost += recipeCost * item.quantity;
+          } else {
+            valid = false;
+          }
+        } else {
+          valid = false;
         }
       });
       
-      // Packs
-      packs.forEach(pack => {
-        const result = ProfitabilityService.analyzePack(pack, recipes, ingredients);
-        if (result) {
-          analysis.push({
-            name: pack.name,
-            type: 'Pack',
-            cost: result.cost,
-            price: result.price,
-            margin: result.marginPercent,
-            status: result.status
-          });
-        }
-      });
-    }
+      if (valid && totalCost > 0) {
+        const margin = ((pack.price - totalCost) / pack.price) * 100;
+        
+        analysis.push({
+          name: pack.name,
+          type: 'Pack',
+          cost: totalCost,
+          price: pack.price,
+          margin: margin,
+          status: margin >= 50 ? 'Excellent' : margin >= 25 ? 'Correct' : margin >= 0 ? 'Faible' : 'Perte'
+        });
+      }
+    });
     
     // Statistiques globales
     const withPrice = analysis.filter(a => a.price > 0);
@@ -406,13 +454,13 @@ export class ExportService {
     
     doc.setFontSize(10);
     doc.setFont(undefined, 'normal');
-    doc.text(`Excellents (≥50%) : ${excellent} (${((excellent/withPrice.length)*100).toFixed(0)}%)`, 14, y);
+    doc.text(`Excellents (>=50%) : ${excellent} (${withPrice.length > 0 ? ((excellent/withPrice.length)*100).toFixed(0) : 0}%)`, 14, y);
     y += 6;
-    doc.text(`Corrects (25-50%) : ${correct} (${((correct/withPrice.length)*100).toFixed(0)}%)`, 14, y);
+    doc.text(`Corrects (25-50%) : ${correct} (${withPrice.length > 0 ? ((correct/withPrice.length)*100).toFixed(0) : 0}%)`, 14, y);
     y += 6;
-    doc.text(`Faibles (<25%) : ${faible} (${((faible/withPrice.length)*100).toFixed(0)}%)`, 14, y);
+    doc.text(`Faibles (<25%) : ${faible} (${withPrice.length > 0 ? ((faible/withPrice.length)*100).toFixed(0) : 0}%)`, 14, y);
     y += 6;
-    doc.text(`En perte (<0%) : ${perte} (${((perte/withPrice.length)*100).toFixed(0)}%)`, 14, y);
+    doc.text(`En perte (<0%) : ${perte} (${withPrice.length > 0 ? ((perte/withPrice.length)*100).toFixed(0) : 0}%)`, 14, y);
     y += 12;
     
     // Tableau détaillé

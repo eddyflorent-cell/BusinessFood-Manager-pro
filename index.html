@@ -868,92 +868,197 @@
         }
         
         /* Print styles for recipes */
-        @media print {
-            /* Hide everything except recipe modal */
-            body > *:not(.modal) {
-                display: none !important;
+        /* ========================================
+           ANIMATIONS & TRANSITIONS
+           ======================================== */
+        
+        /* Keyframes */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
             }
-            
-            /* Show only recipe modal */
-            .modal {
-                position: static !important;
-                background: white !important;
-                padding: 0 !important;
-            }
-            
-            .modal-content {
-                box-shadow: none !important;
-                max-width: 100% !important;
-                margin: 0 !important;
-                border: none !important;
-            }
-            
-            /* Hide buttons and close */
-            .modal-close,
-            .modal-footer,
-            .ingredient-actions,
-            button {
-                display: none !important;
-            }
-            
-            /* Recipe title */
-            .modal-header {
-                border: none !important;
-                padding: 20px 0 !important;
-            }
-            
-            .modal-header h2 {
-                font-size: 24pt !important;
-                margin: 0 !important;
-            }
-            
-            /* Recipe content */
-            .modal-body {
-                padding: 0 !important;
-            }
-            
-            /* Stats cards */
-            .stat-card {
-                break-inside: avoid;
-                page-break-inside: avoid;
-                border: 1px solid #ddd !important;
-                padding: 10px !important;
-            }
-            
-            /* Ingredients table */
-            table {
-                width: 100% !important;
-                border-collapse: collapse !important;
-                margin: 20px 0 !important;
-            }
-            
-            table th,
-            table td {
-                border: 1px solid #ddd !important;
-                padding: 8px !important;
-                text-align: left !important;
-            }
-            
-            table th {
-                background-color: #f5f5f5 !important;
-                font-weight: bold !important;
-            }
-            
-            /* Instructions */
-            pre {
-                white-space: pre-wrap !important;
-                font-family: Arial, sans-serif !important;
-                font-size: 11pt !important;
-                line-height: 1.6 !important;
-                page-break-inside: avoid !important;
-            }
-            
-            /* Page breaks */
-            h3 {
-                page-break-after: avoid !important;
+            to {
+                opacity: 1;
+                transform: translateY(0);
             }
         }
-    </style>
+        
+        @keyframes slideInModal {
+            from {
+                opacity: 0;
+                transform: translateY(-50px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        @keyframes checkmark {
+            0% {
+                stroke-dashoffset: 100;
+            }
+            100% {
+                stroke-dashoffset: 0;
+            }
+        }
+        
+        /* Page transitions */
+        #mainContent {
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        /* Modal animations */
+        .modal-content {
+            animation: slideInModal 0.3s ease-out;
+        }
+        
+        .modal-overlay {
+            animation: fadeIn 0.2s ease-out;
+        }
+        
+        /* Button interactions */
+        .btn:active {
+            transform: scale(0.98);
+        }
+        
+        .btn.loading::after {
+            content: "";
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            margin-left: 8px;
+            border: 2px solid currentColor;
+            border-right-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+        
+        /* Toast animations */
+        .toast {
+            animation: slideInModal 0.3s ease-out;
+        }
+        
+        .toast.toast-success::before {
+            content: "✓";
+            display: inline-block;
+            margin-right: 8px;
+            animation: pulse 0.5s ease-out;
+        }
+        
+        /* Card hover effects */
+        .ingredient-card,
+        .recipe-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .ingredient-card:hover,
+        .recipe-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Input focus animations */
+        input:focus,
+        select:focus,
+        textarea:focus {
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        /* Sidebar links smooth */
+        .sidebar-link {
+            transition: all 0.2s ease;
+        }
+        
+        /* Error shake */
+        .error-shake {
+            animation: shake 0.5s ease;
+        }
+        
+        /* Loading skeleton */
+        @keyframes shimmer {
+            0% {
+                background-position: -468px 0;
+            }
+            100% {
+                background-position: 468px 0;
+            }
+        }
+        
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 400% 100%;
+            animation: shimmer 1.2s ease-in-out infinite;
+            border-radius: 4px;
+        }
+        
+        /* Fade in elements with stagger */
+        .fade-in-stagger > * {
+            animation: fadeIn 0.4s ease-out backwards;
+        }
+        
+        .fade-in-stagger > *:nth-child(1) { animation-delay: 0.05s; }
+        .fade-in-stagger > *:nth-child(2) { animation-delay: 0.1s; }
+        .fade-in-stagger > *:nth-child(3) { animation-delay: 0.15s; }
+        .fade-in-stagger > *:nth-child(4) { animation-delay: 0.2s; }
+        .fade-in-stagger > *:nth-child(5) { animation-delay: 0.25s; }
+        
+        /* Success checkmark animation */
+        .success-checkmark {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto;
+        }
+        
+        .success-checkmark circle {
+            stroke-dasharray: 166;
+            stroke-dashoffset: 166;
+            animation: checkmark 0.6s ease-in-out 0.2s forwards;
+        }
+        
+        .success-checkmark path {
+            stroke-dasharray: 48;
+            stroke-dashoffset: 48;
+            animation: checkmark 0.3s ease-in-out 0.6s forwards;
+        }
+        
+        /* Smooth transitions partout */
+        * {
+            transition-property: background-color, border-color, color, fill, stroke;
+            transition-duration: 0.15s;
+            transition-timing-function: ease-in-out;
+        }
+        
+        /* Désactiver transitions sur éléments spécifiques */
+        button,
+        input[type="checkbox"],
+        input[type="radio"],
+        .no-transition {
+            transition: none;
+        }
+
+            </style>
     <!-- jsPDF pour export PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
@@ -1544,6 +1649,7 @@
               .db-ani-2{animation:dbFU .35s .07s ease both}
               .db-ani-3{animation:dbFU .35s .14s ease both}
               .db-ani-4{animation:dbFU .35s .21s ease both}
+        
             </style>
 
             <!-- ══ EN-TÊTE ══ -->
@@ -7829,7 +7935,7 @@
                     <!-- Future sections placeholder -->
                     <!-- 💾 GESTION STOCKAGE -->
                     <div style="background:white;padding:var(--space-xl);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);margin-bottom:var(--space-xl);">
-                        <h2 style="margin-bottom:var(--space-md);font-family:var(--font-display);">💾 Gestion du stockage</h2>
+                    <h2 style="margin-bottom:var(--space-md);font-family:var(--font-display);">💾 Gestion du stockage</h2>
                         <p style="color:var(--gray);margin-bottom:var(--space-lg);">
                             L'application stocke vos données localement dans votre navigateur. Surveillez l'usage pour éviter la saturation.
                         </p>
@@ -9650,6 +9756,218 @@
                 showToast('❌ Erreur lors de l\'export : ' + error.message, 'error');
             }
         };
+
+        // ========================================
+        // RESPONSIVE & MODE SOMBRE
+        // ========================================
+        
+        // Mode sombre uniquement
+        loadThemePreference();
+
+        // ========================================
+        // MODE SOMBRE
+        // ========================================
+        
+        // Toggle mode sombre
+        window.toggleDarkMode = function(enable) {
+            const root = document.documentElement;
+            
+            if (enable) {
+                root.setAttribute('data-theme', 'dark');
+                localStorage.setItem('BFM_THEME', 'dark');
+            } else {
+                root.removeAttribute('data-theme');
+                localStorage.setItem('BFM_THEME', 'light');
+            }
+            
+            // Mettre à jour le toggle dans les settings si affiché
+            const toggle = document.querySelector('input[name="darkMode"]');
+            if (toggle) {
+                toggle.checked = enable;
+            }
+        };
+        
+        // Charger préférence theme au démarrage
+        window.loadThemePreference = function() {
+            const savedTheme = localStorage.getItem('BFM_THEME');
+            if (savedTheme === 'dark') {
+                toggleDarkMode(true);
+            }
+        };
+        
+        // Charger au démarrage
+        loadThemePreference();
+
+        // ========================================
+        // PERFORMANCE & UX UTILITIES
+        // ========================================
+        
+        // Debounce pour optimiser recherche
+        window.debounce = function(func, wait = 300) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        };
+        
+        // Throttle pour scroll events
+        window.throttle = function(func, limit = 100) {
+            let inThrottle;
+            return function(...args) {
+                if (!inThrottle) {
+                    func.apply(this, args);
+                    inThrottle = true;
+                    setTimeout(() => inThrottle = false, limit);
+                }
+            };
+        };
+        
+        // Cleanup automatique données anciennes
+        window.cleanupOldData = function() {
+            const now = new Date();
+            const sixMonthsAgo = new Date(now.getTime() - (180 * 24 * 60 * 60 * 1000));
+            
+            let cleaned = 0;
+            
+            // Nettoyer lots périmés anciens
+            appState.data.ingredients.forEach(ing => {
+                if (ing.lots) {
+                    const initialLength = ing.lots.length;
+                    ing.lots = ing.lots.filter(lot => {
+                        if (lot.epuise && lot.dlc) {
+                            const dlcDate = new Date(lot.dlc);
+                            return dlcDate > sixMonthsAgo;
+                        }
+                        return true;
+                    });
+                    cleaned += initialLength - ing.lots.length;
+                }
+            });
+            
+            if (cleaned > 0) {
+                saveData();
+                console.log(`🧹 Cleaned ${cleaned} old lots`);
+                return cleaned;
+            }
+            return 0;
+        };
+        
+        // Auto-save indicator
+        window.showSaveIndicator = function(success = true) {
+            const indicator = document.createElement('div');
+            indicator.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 12px 20px;
+                background: ${success ? 'var(--success)' : 'var(--danger)'};
+                color: white;
+                border-radius: 8px;
+                font-weight: 600;
+                z-index: 10000;
+                animation: slideInModal 0.3s ease-out;
+            `;
+            indicator.textContent = success ? '✓ Sauvegardé' : '✗ Erreur sauvegarde';
+            document.body.appendChild(indicator);
+            
+            setTimeout(() => {
+                indicator.style.opacity = '0';
+                indicator.style.transform = 'translateY(-20px)';
+                indicator.style.transition = 'all 0.3s ease';
+                setTimeout(() => indicator.remove(), 300);
+            }, 2000);
+        };
+        
+        // Shortcuts clavier
+        window.initKeyboardShortcuts = function() {
+            document.addEventListener('keydown', function(e) {
+                // Ctrl/Cmd + S : Save (preventDefault pour ne pas sauvegarder la page)
+                if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                    e.preventDefault();
+                    saveData();
+                    showSaveIndicator(true);
+                    return false;
+                }
+                
+                // Esc : Fermer modal ouverte
+                if (e.key === 'Escape') {
+                    const openModal = document.querySelector('.modal-overlay[style*="flex"]');
+                    if (openModal) {
+                        const modalId = openModal.id.replace('Overlay', '');
+                        if (window['close' + modalId.charAt(0).toUpperCase() + modalId.slice(1)]) {
+                            window['close' + modalId.charAt(0).toUpperCase() + modalId.slice(1)]();
+                        }
+                    }
+                }
+                
+                // Ctrl/Cmd + F : Focus search
+                if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+                    e.preventDefault();
+                    const searchInput = document.querySelector('input[type="text"][placeholder*="echerch"]');
+                    if (searchInput) {
+                        searchInput.focus();
+                        searchInput.select();
+                    }
+                    return false;
+                }
+            });
+        };
+        
+        // Améliorer la fonction saveData existante pour montrer l'indicateur
+        const originalSaveData = window.saveData;
+        window.saveData = function() {
+            try {
+                originalSaveData();
+                // Note: pas de showSaveIndicator ici car déjà dans le shortcut
+                return true;
+            } catch (error) {
+                console.error('Save error:', error);
+                showSaveIndicator(false);
+                return false;
+            }
+        };
+        
+        // Loading state helper
+        window.setButtonLoading = function(button, loading = true) {
+            if (loading) {
+                button.classList.add('loading');
+                button.disabled = true;
+                button.dataset.originalText = button.textContent;
+            } else {
+                button.classList.remove('loading');
+                button.disabled = false;
+                if (button.dataset.originalText) {
+                    button.textContent = button.dataset.originalText;
+                }
+            }
+        };
+        
+        // Shake element on error
+        window.shakeElement = function(element) {
+            element.classList.add('error-shake');
+            setTimeout(() => element.classList.remove('error-shake'), 500);
+        };
+        
+        // Init au chargement
+        initKeyboardShortcuts();
+        
+        // Auto-cleanup mensuel
+        const lastCleanup = localStorage.getItem('BFM_LAST_CLEANUP');
+        const now = Date.now();
+        if (!lastCleanup || (now - parseInt(lastCleanup)) > (30 * 24 * 60 * 60 * 1000)) {
+            setTimeout(() => {
+                const cleaned = cleanupOldData();
+                if (cleaned > 0) {
+                    showToast(`🧹 ${cleaned} anciens lots nettoyés`, 'info');
+                }
+                localStorage.setItem('BFM_LAST_CLEANUP', now.toString());
+            }, 5000); // Attendre 5s après chargement
+        }
 
     </script>
 </body>
